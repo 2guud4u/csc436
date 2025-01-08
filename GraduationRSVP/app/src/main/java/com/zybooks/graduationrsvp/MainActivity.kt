@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
 fun GradScreen(modifier: Modifier = Modifier) {
     Image(
         painter = painterResource(R.drawable.cap),
-        contentDescription = stringResource(R.string.graduation_cap,
+        contentDescription = stringResource(R.string.graduation_cap),
         alpha = 0.3f
     )
     Text(
