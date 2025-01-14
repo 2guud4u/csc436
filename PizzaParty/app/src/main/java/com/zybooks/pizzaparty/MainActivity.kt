@@ -86,7 +86,7 @@ fun PizzaPartyScreen(modifier: Modifier = Modifier) {
         )
         Button(
             onClick = {
-                totalPizzas=calculateNumPizzas(numPeople = numPeopleInput.toInt(), "hi")
+                totalPizzas=calculateNumPizzas(numPeople = numPeopleInput.toIntOrNull() ?: 0, "hi")
             },
             modifier = modifier.fillMaxWidth()
         ) {
