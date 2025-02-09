@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zybooks.countdowntimer.ui.theme.CountdownTimerTheme
 import java.text.DecimalFormat
@@ -40,6 +41,8 @@ fun TimerScreen(
    modifier: Modifier = Modifier,
    timerViewModel: TimerViewModel = viewModel()
 ) {
+   val uiState by timerViewModel.uiState.collectAsStateWithLifecycle()
+
    Column(horizontalAlignment = Alignment.CenterHorizontally) {
       Box(
          modifier = modifier
@@ -48,24 +51,25 @@ fun TimerScreen(
          contentAlignment = Alignment.Center
       ) {
          // TODO: Add AnimatedTimeIndicator here
-         if (timerViewModel.isRunning) {
+         if (uiState.isRunning) {
             AnimatedTimeIndicator(
-               timeDuration = timerViewModel.totalMillis.toInt()
+               timeDuration = uiState.totalMillis.toInt()
             )
          }
 
          Text(
-            text = timerText(timerViewModel.remainingMillis),
+            text = timerText(uiState.remainingMillis),
             fontSize = 40.sp,
          )
       }
       TimePicker(
-         hour = timerViewModel.selectedHour,
-         min = timerViewModel.selectedMinute,
-         sec = timerViewModel.selectedSecond,
+         hour = uiState.selectedHour,
+         min = uiState.selectedMinute,
+         sec = uiState.selectedSecond,
+
          onTimePick = timerViewModel::selectTime
       )
-      if (timerViewModel.isRunning) {
+      if (uiState.isRunning) {
          Button(
             onClick = timerViewModel::cancelTimer,
             modifier = modifier.padding(50.dp)
@@ -74,9 +78,9 @@ fun TimerScreen(
          }
       } else {
          Button(
-            enabled = timerViewModel.selectedHour +
-                  timerViewModel.selectedMinute +
-                  timerViewModel.selectedSecond > 0,
+            enabled = uiState.selectedHour +
+                    uiState.selectedMinute +
+                    uiState.selectedSecond > 0,
             onClick = timerViewModel::startTimer,
             modifier = modifier.padding(top = 50.dp)
          ) {

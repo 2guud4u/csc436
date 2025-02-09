@@ -65,14 +65,14 @@ class MainActivity : ComponentActivity() {
       super.onStop()
 
       // Start TimerWorker if the timer is running
-      if (timerViewModel.isRunning) {
+      if (timerViewModel.uiState.value.isRunning) {
          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(this,
                   Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-               startWorker(timerViewModel.remainingMillis)
+               startWorker(timerViewModel.uiState.value.remainingMillis)
             }
          } else {
-            startWorker(timerViewModel.remainingMillis)
+            startWorker(timerViewModel.uiState.value.remainingMillis)
          }
       }
    }
