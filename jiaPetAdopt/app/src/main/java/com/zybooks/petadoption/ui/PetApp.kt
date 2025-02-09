@@ -1,5 +1,7 @@
 package com.zybooks.petadoption.ui
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -257,7 +260,7 @@ fun AdoptScreen(
    viewModel: AdoptViewModel = viewModel(),
 ) {
    val pet = viewModel.getPet(petId)
-
+   val context = LocalContext.current
    Scaffold(
       topBar = {
          PetAppBar(
@@ -289,7 +292,7 @@ fun AdoptScreen(
             modifier = modifier.padding(6.dp),
          )
          Button(
-            onClick = { },
+            onClick = { shareAdoption(context, pet) },
             modifier = modifier.padding(6.dp)
          ) {
             Icon(Icons.Default.Share, null)
@@ -306,4 +309,16 @@ fun PreviewAdoptScreen() {
    PetAdoptionTheme {
       AdoptScreen(pet.id)
    }
+}
+
+fun shareAdoption(context: Context, pet: Pet) {
+   val intent = Intent(Intent.ACTION_SEND).apply {
+      type = "text/plain"
+      putExtra(Intent.EXTRA_SUBJECT, "Meet ${pet.name}!")
+      putExtra(Intent.EXTRA_TEXT, "I've adopted ${pet.name}!")
+   }
+
+   context.startActivity(
+      Intent.createChooser(intent, "Pet Adoption")
+   )
 }
