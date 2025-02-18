@@ -47,58 +47,27 @@ import com.zybooks.petadoption.data.PetDataSource
 import com.zybooks.petadoption.data.PetGender
 import com.zybooks.petadoption.ui.theme.PetAdoptionTheme
 import kotlinx.serialization.Serializable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.TextButton
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material.icons.filled.Refresh
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.TextField
 
 sealed class Routes {
    @Serializable
@@ -111,7 +80,8 @@ sealed class Routes {
 
    @Serializable
    data class Interact(
-      val petId: Int
+      val classCode: String,
+      val role: String
    )
 
    @Serializable
@@ -154,24 +124,31 @@ fun PluggedApp() {
 
             onUpClick = {
                navController.navigateUp()
+            },
+
+            onConnect = {
+                  classCode -> navController.navigate(
+               Routes.Interact(classCode, details.role)
+               )
             }
          )
       }
-      composable<Routes.Detail> { backstackEntry ->
-         val details: Routes.Detail = backstackEntry.toRoute()
 
-         DetailScreen(
-            petId = details.petId,
-            onAdoptClick = {
-               navController.navigate(
-                  Routes.Adopt(details.petId)
-               )
-            },
+      composable<Routes.Interact> { backstackEntry ->
+         val details: Routes.Interact = backstackEntry.toRoute()
+
+
+         InteractScreen(
             onUpClick = {
                navController.navigateUp()
-            }
+            },
+            classCode = details.classCode,
+            role=details.role
          )
+
+
       }
+
       composable<Routes.Adopt> { backstackEntry ->
          val adopt: Routes.Adopt = backstackEntry.toRoute()
 
@@ -213,10 +190,159 @@ fun PetAppBar(
 }
 
 @Composable
+fun InteractScreen(
+   connectionViewModel: ConnectionViewModel = viewModel(),
+   onUpClick: () -> Unit = { },
+   classCode: String,
+   role: String
+) {
+   var presses by remember { mutableIntStateOf(0) }
+
+   Scaffold(
+      topBar = {
+         PluggedTopBar(
+            canNavigateBack = true,
+            onUpClick = onUpClick
+         )
+      },
+      bottomBar = {
+         PluggedBottomBar()
+      },
+      floatingActionButton = {
+         FloatingActionButton(onClick = { presses++ }) {
+            Icon(Icons.Default.Add, contentDescription = "Add")
+         }
+      }
+   ) { innerPadding ->
+      Box(
+         modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(innerPadding)
+      ) {
+         // Align InteractTopBar to the top-center
+         InteractTopBar(classCode = classCode)
+         // Center content in the Box
+         Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize().align(Alignment.Center) // Ensure the column fills the available space
+         ) {
+            when(role){
+               "student" -> StudentContent()
+               "teacher" -> TeacherContent()
+
+            }
+         }
+      }
+   }
+}
+@Composable
+fun StudentContent(){
+   Column() {
+      GenericTextInput(
+          text = "",
+          onTextChange = {},
+          labelText = "Question",
+          buttonText = "Ask!",
+          onButtonClick = {},
+      )
+      GenericTextInput(
+         text = "",
+         onTextChange = {},
+         labelText = "Feedback",
+         buttonText = "Send!",
+         onButtonClick = {},
+      )
+      HorizontalDivider(
+         modifier = Modifier.padding(horizontal = 16.dp), // Adds padding on the sides
+         thickness = 2.dp, // Thicker line
+         color = Color.Gray // Custom color
+      )
+      Text("Quick Feedback", fontSize = MaterialTheme.typography.titleLarge.fontSize,)
+      Row() {
+         Button(
+            onClick = {},
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+            ) {
+            Text("Slow Down Please")
+         }
+         Button(
+            onClick = {},
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+         ) {
+            Text("I Am Confused")
+         }
+      }
+   }
+}
+@Composable
+fun TeacherContent(){
+   val textInput = ""
+
+   ItemWithCaption(
+      caption = "Class Code",
+      item = {
+         TextField(
+            value = textInput,
+            onValueChange = {},
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+               keyboardType = KeyboardType.Number),
+         )
+      }
+   )
+
+   Button(
+      onClick = {},
+      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+   ) {
+      Text("Connect!")
+   }
+
+}
+@Composable
+fun InteractTopBar(
+   classCode: String,
+
+   ) {
+   Column(modifier = Modifier
+      .fillMaxWidth()
+      .padding(horizontal = 16.dp)
+
+   ) {
+      Row(modifier = Modifier
+         .fillMaxWidth()
+         .padding(vertical = 8.dp)
+         ,horizontalArrangement = Arrangement.SpaceBetween,) {
+         Column() {
+            Text(
+               text = "Class Code",
+               style = MaterialTheme.typography.titleSmall, // Making it small
+            )
+            Text(
+               text = classCode,
+               style = MaterialTheme.typography.titleLarge,
+            )
+
+         }
+         GenericAvatar()
+      }
+      HorizontalDivider(
+         modifier = Modifier.padding(horizontal = 16.dp), // Adds padding on the sides
+         thickness = 2.dp, // Thicker line
+         color = Color.Gray // Custom color
+      )
+
+   }
+
+}
+@Composable
 fun ConnectScreen(
    connectionViewModel: ConnectionViewModel = viewModel(),
    onUpClick: () -> Unit = { },
    role: String,
+   onConnect: (String) -> Unit
 ) {
    var presses by remember { mutableIntStateOf(0) }
 
@@ -252,12 +378,44 @@ fun ConnectScreen(
          }
          when (role) {
             "student" -> {
-               StudentPrompt(connectionViewModel.inputId, {it -> connectionViewModel.inputId = it})
+               ItemWithCaption(
+                  caption = "Class Code",
+                  item = {
+                     TextField(
+                        value = "123",
+                        onValueChange = {},
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                           keyboardType = KeyboardType.Number),
+                     )
+                  }
+               )
+               Button(
+                  onClick = {onConnect("123")},
+                  colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+               ) {
+                  Text("Connect!")
+               }
 
             }
 
             "teacher" -> {
-               TeacherPrompt(connectionViewModel.serverId, {connectionViewModel.serverId = connectionViewModel.generate6DigitUUID()} )
+               ItemWithCaption(
+                  caption="Session Id",
+                  item = {
+                     Row( verticalAlignment = Alignment.CenterVertically ) {
+                        Text("123")
+                        RefreshButton(onRefresh = {})
+                     }
+                  }
+               )
+
+               Button(
+                  onClick = {onConnect("123")},
+                  colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+               ) {
+                  Text("Start!")
+               }
             }
          }
 
@@ -327,10 +485,9 @@ fun TeacherPrompt(serverId: String, onRefresh:()->Unit){
       }
    )
 
-
-
    Button(
       onClick = {},
+      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
    ) {
       Text("Start!")
    }
@@ -353,34 +510,13 @@ fun StudentPrompt(textInput: String, onValueChange: (String)-> Unit,){
    )
    Button(
       onClick = {},
+      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
    ) {
       Text("Connect!")
    }
-//   RedoRoleButton()
+
 }
 
-@Composable
-fun StartPrompt(onRoleSelected: (String) -> Unit){
-   Text("You are a")
-   Button(onClick = {onRoleSelected("teacher")},
-      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
-      ) {
-      Text("Teacher!")
-   }
-   Button(onClick = {onRoleSelected("student")},
-      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
-      Text("Student!")
-   }
-}
-
-//@Composable
-//fun RedoRoleButton(
-//   connectionViewModel: ConnectionViewModel = viewModel()
-//){
-//   TextButton(onClick = {connectionViewModel.role = ""}) {
-//      Text("<- Back")
-//   }
-//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
