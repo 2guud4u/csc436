@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
@@ -34,7 +35,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material3.Card
 import androidx.compose.ui.text.style.TextOverflow
-
+import androidx.compose.foundation.BorderStroke
 @Composable
 fun GenericAvatar(size: Int = 48) {
     Surface(
@@ -152,16 +153,20 @@ fun NotifCard(
     subtitle: String,
     description: String,
     imageUrl: String,
-    onFavoriteClick: () -> Unit = {},
-    onShareClick: () -> Unit = {},
-    isElevated: Boolean = true
+    onDeleteClick: () -> Unit = {},
+
+    isElevated: Boolean = true,
+    modifier: Modifier = Modifier.padding(horizontal = 16.dp)
 ) {
     val cardComposable: @Composable () -> Unit = {
+
+
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+
+
         ) {
             // Image
 //            AsyncImage(
@@ -177,7 +182,8 @@ fun NotifCard(
 
             // Content
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).align(Alignment.CenterVertically).padding(vertical = 16.dp)
+
             ) {
                 Text(
                     text = title,
@@ -201,31 +207,22 @@ fun NotifCard(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-
-            // Actions
-            Column {
-                IconButton(onClick = onFavoriteClick) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = "Favorite",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                IconButton(onClick = onShareClick) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "Share",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "Favorite",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
+
+
+
         }
     }
 
     if (isElevated) {
         ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.surface,
@@ -236,15 +233,18 @@ fun NotifCard(
         }
     } else {
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            ),
+            border = BorderStroke(1.dp, Color.LightGray)
+
         ) {
             cardComposable()
         }
     }
 }
+
 
 

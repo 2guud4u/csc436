@@ -284,13 +284,28 @@ fun StudentContent(){
 @Composable
 fun TeacherContent(){
    NotifCard(
-       title = "idk",
-       subtitle = "sub",
-       description = "haha",
+       title = "Question",
+       subtitle = "Anon",
+       description = "I need helppp",
        imageUrl = "",
-       onFavoriteClick = {},
-       onShareClick = {},
-       isElevated = true
+       onDeleteClick = {},
+       isElevated = false,
+   )
+   NotifCard(
+      title = "Question",
+      subtitle = "Anon",
+      description = "I need helppp",
+      imageUrl = "",
+      onDeleteClick = {},
+      isElevated = false,
+   )
+   NotifCard(
+      title = "Question",
+      subtitle = "Anon",
+      description = "I need helppp",
+      imageUrl = "",
+      onDeleteClick = {},
+      isElevated = false,
    )
 }
 @Composable
