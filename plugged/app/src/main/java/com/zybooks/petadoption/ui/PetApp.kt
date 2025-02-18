@@ -59,6 +59,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 
@@ -68,6 +69,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.TextField
+
+
 
 sealed class Routes {
    @Serializable
@@ -255,11 +258,13 @@ fun StudentContent(){
          onButtonClick = {},
       )
       HorizontalDivider(
-         modifier = Modifier.padding(horizontal = 16.dp), // Adds padding on the sides
          thickness = 2.dp, // Thicker line
-         color = Color.Gray // Custom color
+         color = Color.Gray, // Custom color,
+         modifier = Modifier
+            .width(370.dp)
+            .padding(vertical = 16.dp)
       )
-      Text("Quick Feedback", fontSize = MaterialTheme.typography.titleLarge.fontSize,)
+
       Row() {
          Button(
             onClick = {},
@@ -278,28 +283,15 @@ fun StudentContent(){
 }
 @Composable
 fun TeacherContent(){
-   val textInput = ""
-
-   ItemWithCaption(
-      caption = "Class Code",
-      item = {
-         TextField(
-            value = textInput,
-            onValueChange = {},
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-               keyboardType = KeyboardType.Number),
-         )
-      }
+   NotifCard(
+       title = "idk",
+       subtitle = "sub",
+       description = "haha",
+       imageUrl = "",
+       onFavoriteClick = {},
+       onShareClick = {},
+       isElevated = true
    )
-
-   Button(
-      onClick = {},
-      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
-   ) {
-      Text("Connect!")
-   }
-
 }
 @Composable
 fun InteractTopBar(
@@ -378,44 +370,55 @@ fun ConnectScreen(
          }
          when (role) {
             "student" -> {
-               ItemWithCaption(
-                  caption = "Class Code",
-                  item = {
-                     TextField(
-                        value = "123",
-                        onValueChange = {},
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                           keyboardType = KeyboardType.Number),
-                     )
-                  }
-               )
-               Button(
-                  onClick = {onConnect("123")},
-                  colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+               Column(
+                  horizontalAlignment = Alignment.CenterHorizontally
                ) {
-                  Text("Connect!")
+                  ItemWithCaption(
+                     caption = "Class Code",
+                     item = {
+                        TextField(
+                           value = "123",
+                           onValueChange = {},
+                           singleLine = true,
+                           keyboardOptions = KeyboardOptions(
+                              keyboardType = KeyboardType.Number),
+                        )
+                     }
+                  )
+                  Button(
+                     onClick = {onConnect("123")},
+                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+
+                  ) {
+                     Text("Connect!")
+                  }
                }
+
 
             }
 
             "teacher" -> {
-               ItemWithCaption(
-                  caption="Session Id",
-                  item = {
-                     Row( verticalAlignment = Alignment.CenterVertically ) {
-                        Text("123")
-                        RefreshButton(onRefresh = {})
+               Column(
+                  horizontalAlignment = Alignment.CenterHorizontally
+               ){
+                  ItemWithCaption(
+                     caption="Session Id",
+                     item = {
+                        Row( verticalAlignment = Alignment.CenterVertically ) {
+                           Text("123343")
+                           RefreshButton(onRefresh = {})
+                        }
                      }
-                  }
-               )
+                  )
 
-               Button(
-                  onClick = {onConnect("123")},
-                  colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
-               ) {
-                  Text("Start!")
+                  Button(
+                     onClick = {onConnect("123")},
+                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                  ) {
+                     Text("Start!")
+                  }
                }
+
             }
          }
 
