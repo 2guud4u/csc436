@@ -18,7 +18,7 @@ import java.net.URI
 import java.net.URISyntaxException
 import java.nio.ByteBuffer
 
-class WebSocketViewModel : ViewModel() {
+class PluggedViewModel : ViewModel() {
     private val TAG = "WebSocketApp"
     private val DEFAULT_PORT = 45678
 

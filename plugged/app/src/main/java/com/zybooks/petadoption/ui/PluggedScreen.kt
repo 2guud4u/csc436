@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WebSocketScreen(viewModel: WebSocketViewModel, ipAddress: String) {
+fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
     // Collect state from ViewModel
     val mode by remember { viewModel.connectionMode }
     val serverIp by remember { viewModel.serverIp }
@@ -109,7 +109,7 @@ fun WebSocketScreen(viewModel: WebSocketViewModel, ipAddress: String) {
 }
 
 @Composable
-fun ModeSelectionCard(viewModel: WebSocketViewModel) {
+fun ModeSelectionCard(viewModel: PluggedViewModel) {
     Card(
         modifier = Modifier
             .fillMaxWidth()

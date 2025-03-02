@@ -8,11 +8,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
-import com.zybooks.petadoption.ui.WebSocketScreen
-import com.zybooks.petadoption.ui.WebSocketViewModel
+import com.zybooks.petadoption.ui.PluggedScreen
+import com.zybooks.petadoption.ui.PluggedViewModel
 
-class WebSocketActivity : ComponentActivity() {
-    private val viewModel: WebSocketViewModel by viewModels()
+class PluggedActivity : ComponentActivity() {
+    private val viewModel: PluggedViewModel by viewModels()
 
     // For permission request
     private val requestPermissionsLauncher = registerForActivityResult(
@@ -35,7 +35,7 @@ class WebSocketActivity : ComponentActivity() {
         val ipAddress = viewModel.getLocalIpAddress()
 
         setContent {
-            WebSocketScreen(viewModel, ipAddress)
+            PluggedScreen(viewModel, ipAddress)
         }
     }
 

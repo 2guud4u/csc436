@@ -27,7 +27,7 @@
         </activity>
 
         <activity
-            android:name=".WebSocketActivity"
+            android:name=".PluggedActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
