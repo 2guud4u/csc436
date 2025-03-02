@@ -25,17 +25,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".WebSocketServerActivity"
-            android:exported="true">
-            <!-- Add intent filters if needed -->
-        </activity>
 
-        <activity
-            android:name=".WebSocketClientActivity"
-            android:exported="true">
-            <!-- Add intent filters if needed -->
-        </activity>
         <activity
             android:name=".WebSocketActivity"
             android:exported="true">
