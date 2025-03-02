@@ -1,10 +1,8 @@
 package com.zybooks.petadoption.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -17,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +36,7 @@ sealed class Routes {
     @Serializable
     data class Interact(
         val classCode: String,
+        val role: String
     )
 }
 
@@ -93,9 +91,22 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                 ) {
                     composable<Routes.Start> {
                         if (mode.isEmpty()) {
-                            ModeSelectionCard(viewModel)
+                            ModeSelectionCard(
+                                viewModel,
+                                onSelect={
+                                    mode ->
+                                    navController.navigate(
+                                        Routes.Connect("hi")
+                                    )
+                                    viewModel.setMode(mode);
+
+                                }
+
+                            )
                         }
+
                     }
+
                     composable<Routes.Connect> { backstackEntry ->
                         if (mode.isNotEmpty() && !isConnected) {
                             ConnectionSettingsCard(
@@ -109,18 +120,30 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                                 onConnectToServer = { viewModel.connectToServer(serverIp, port) }
                             )
                         }
+                        Text("you are in connect")
                     }
                     composable<Routes.Interact> { backstackEntry ->
                         val details: Routes.Interact = backstackEntry.toRoute()
 
 
-                        if (mode.isNotEmpty()) {
-                            LogMessagesCard(logMessages = logMessages)
-                    }
+//                        if (mode.isNotEmpty()) {
+//                            LogMessagesCard(logMessages = logMessages)
+//                    }
 
                     }
                 }
-
+//                        if (mode.isNotEmpty() && !isConnected) {
+//                            ConnectionSettingsCard(
+//                                mode = mode,
+//                                ipAddress = ipAddress,
+//                                serverIp = serverIp,
+//                                port = port,
+//                                onServerIpChange = { viewModel.serverIp.value = it },
+//                                onPortChange = { viewModel.port.value = it },
+//                                onStartServer = { viewModel.startServer(port) },
+//                                onConnectToServer = { viewModel.connectToServer(serverIp, port) }
+//                            )
+//                        }
 
                 // Connection settings based on mode
 
@@ -161,19 +184,20 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
 }
 
 @Composable
-fun ModeSelectionCard(viewModel: PluggedViewModel) {
+fun ModeSelectionCard(viewModel: PluggedViewModel, onSelect: (String) -> Unit) {
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Text("You are a")
-                Button(onClick = {viewModel.setMode("server")},
+                Button(onClick = {onSelect("server")}
+                ,
                     colors = ButtonDefaults.buttonColors()
                 ) {
                     Text("Teacher!")
                 }
-                Button(onClick = {viewModel.setMode("client")},
+                Button(onClick = {onSelect("client")},
                     colors = ButtonDefaults.buttonColors()) {
                     Text("Student!")
                 }

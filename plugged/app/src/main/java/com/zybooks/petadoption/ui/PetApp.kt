@@ -75,53 +75,53 @@ import kotlinx.serialization.Serializable
 fun PluggedApp(ipAddress: String) {
    val navController = rememberNavController()
 
-   NavHost(
-      navController = navController,
-      startDestination = Routes.Start
-   ) {
-      composable<Routes.Start> {
-         StartScreen(
-            onRoleSelected = {
-               role -> navController.navigate(
-                  Routes.Connect(role)
-               )
-            }
-         )
-      }
-
-      composable<Routes.Connect> { backstackEntry ->
-         val details: Routes.Connect = backstackEntry.toRoute()
-
-         ConnectScreen(
-            role = details.role,
-
-            onUpClick = {
-               navController.navigateUp()
-            },
-
-            onConnect = {
-                  classCode -> navController.navigate(
-               Routes.Interact(classCode, details.role)
-               )
-            }
-         )
-      }
-
-      composable<Routes.Interact> { backstackEntry ->
-         val details: Routes.Interact = backstackEntry.toRoute()
-
-
-         InteractScreen(
-            onUpClick = {
-               navController.navigateUp()
-            },
-            classCode = details.classCode,
-            role=details.role
-         )
-
-
-      }
-   }
+//   NavHost(
+//      navController = navController,
+//      startDestination = Routes.Start
+//   ) {
+//      composable<Routes.Start> {
+//         StartScreen(
+//            onRoleSelected = {
+//               role -> navController.navigate(
+//                  Routes.Connect(role)
+//               )
+//            }
+//         )
+//      }
+//
+//      composable<Routes.Connect> { backstackEntry ->
+//         val details: Routes.Connect = backstackEntry.toRoute()
+//
+//         ConnectScreen(
+//            role = details.role,
+//
+//            onUpClick = {
+//               navController.navigateUp()
+//            },
+//
+//            onConnect = {
+//                  classCode -> navController.navigate(
+//               Routes.Interact(classCode, details.role)
+//               )
+//            }
+//         )
+//      }
+//
+//      composable<Routes.Interact> { backstackEntry ->
+//         val details: Routes.Interact = backstackEntry.toRoute()
+//
+//
+//         InteractScreen(
+//            onUpClick = {
+//               navController.navigateUp()
+//            },
+//            classCode = details.classCode,
+//            role=details.role
+//         )
+//
+//
+//      }
+//   }
 }
 
 //Socket functionality
