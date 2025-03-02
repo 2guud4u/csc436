@@ -257,7 +257,7 @@ fun InteractTopBar(
          ,horizontalArrangement = Arrangement.SpaceBetween,) {
          Column() {
             Text(
-               text = "Class Code",
+               text = "Class IP",
                style = MaterialTheme.typography.titleSmall, // Making it small
             )
             Text(

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,7 +43,7 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
     val mode by remember { viewModel.connectionMode }
     val serverIp by remember { viewModel.serverIp }
     val port by remember { viewModel.port }
-    val messageToSend by remember { viewModel.messageToSend }
+
     val isConnected by remember { viewModel.isConnected }
     val logMessages = viewModel.logMessages
     val navController = rememberNavController()
@@ -126,58 +127,29 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                     composable<Routes.Interact> { backstackEntry ->
                         val details: Routes.Interact = backstackEntry.toRoute()
 
+                        InteractionScreen(viewModel,ipAddress=ipAddress, logMessages)
 
-                        if (mode.isNotEmpty()) {
-                            LogMessagesCard(logMessages = logMessages)
+//                        Spacer(modifier = Modifier.height(8.dp))
+//
+
+//
+//                        Spacer(modifier = Modifier.height(8.dp))
+//
+//                        DisconnectButton(
+//                            mode = mode,
+//                            onDisconnect = {
+//                                if (mode == "server") {
+//                                    viewModel.stopServer()
+//                                } else {
+//                                    viewModel.disconnectFromServer()
+//                                }
+//                            }
+//                        )
+
                     }
-
-                    }
-                }
-//                        if (mode.isNotEmpty() && !isConnected) {
-//                            ConnectionSettingsCard(
-//                                mode = mode,
-//                                ipAddress = ipAddress,
-//                                serverIp = serverIp,
-//                                port = port,
-//                                onServerIpChange = { viewModel.serverIp.value = it },
-//                                onPortChange = { viewModel.port.value = it },
-//                                onStartServer = { viewModel.startServer(port) },
-//                                onConnectToServer = { viewModel.connectToServer(serverIp, port) }
-//                            )
-//                        }
-
-                // Connection settings based on mode
-
-
-
-//                    if (mode.isNotEmpty()) {
-//                        LogMessagesCard(logMessages = logMessages)
-//                    }
-                }
                 }
 
-                // Fixed bottom area for message input and disconnect button
-                if (mode.isNotEmpty() && isConnected) {
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    MessageInputRow(
-                        messageToSend = messageToSend,
-                        onMessageChange = { viewModel.messageToSend.value = it },
-                        onSendMessage = { viewModel.sendMessage(messageToSend) }
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    DisconnectButton(
-                        mode = mode,
-                        onDisconnect = {
-                            if (mode == "server") {
-                                viewModel.stopServer()
-                            } else {
-                                viewModel.disconnectFromServer()
-                            }
-                        }
-                    )
+                }
                 }
             }
         }
@@ -284,16 +256,40 @@ fun ConnectionSettingsCard(
         }
 
 }
-
+@Composable
+fun InteractionScreen(
+    viewModel: PluggedViewModel,
+    ipAddress: String,
+    logMessages: SnapshotStateList<String>
+){
+    val messageToSend by remember { viewModel.messageToSend }
+    // Align InteractTopBar to the top-center
+    InteractTopBar(classCode = ipAddress)
+    // Center content in the Box
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize() // Ensure the column fills the available space
+    ) {
+        LogMessagesCard(logMessages = logMessages)
+        MessageInputRow(
+            messageToSend = messageToSend,
+            onMessageChange = { viewModel.messageToSend.value = it },
+            onSendMessage = { viewModel.sendMessage(messageToSend) }
+        )
+        when(viewModel.connectionMode.value){
+            "client" -> StudentContent()
+            "server" -> TeacherContent()
+        }
+    }
+}
 @Composable
 fun LogMessagesCard(logMessages: List<String>) {
     Card(
-        modifier = Modifier.fillMaxSize()
+
     ) {
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
         ) {
             items(logMessages) { message ->
                 Text(
@@ -302,6 +298,7 @@ fun LogMessagesCard(logMessages: List<String>) {
                 )
             }
         }
+
     }
 }
 
