@@ -173,74 +173,8 @@ fun InteractScreen(
       }
    }
 }
-@Composable
-fun StudentContent(){
-   Column() {
-      GenericTextInput(
-          text = "",
-          onTextChange = {},
-          labelText = "Question",
-          buttonText = "Ask!",
-          onButtonClick = {},
-      )
-      GenericTextInput(
-         text = "",
-         onTextChange = {},
-         labelText = "Feedback",
-         buttonText = "Send!",
-         onButtonClick = {},
-      )
-      HorizontalDivider(
-         thickness = 2.dp, // Thicker line
-         color = Color.Gray, // Custom color,
-         modifier = Modifier
-            .width(370.dp)
-            .padding(vertical = 16.dp)
-      )
 
-      Row() {
-         Button(
-            onClick = {},
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-            ) {
-            Text("Slow Down Please")
-         }
-         Button(
-            onClick = {},
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-         ) {
-            Text("I Am Confused")
-         }
-      }
-   }
-}
-@Composable
-fun TeacherContent(){
-   NotifCard(
-       title = "Question",
-       subtitle = "Anon",
-       description = "I need helppp",
-       imageUrl = "",
-       onDeleteClick = {},
-       isElevated = false,
-   )
-   NotifCard(
-      title = "Question",
-      subtitle = "Anon",
-      description = "I need helppp",
-      imageUrl = "",
-      onDeleteClick = {},
-      isElevated = false,
-   )
-   NotifCard(
-      title = "Question",
-      subtitle = "Anon",
-      description = "I need helppp",
-      imageUrl = "",
-      onDeleteClick = {},
-      isElevated = false,
-   )
-}
+
 @Composable
 fun InteractTopBar(
    classCode: String,

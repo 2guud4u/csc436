@@ -19,9 +19,9 @@ class PluggedActivity : ComponentActivity() {
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         if (permissions.all { it.value }) {
-            viewModel.addLogMessage("All permissions granted")
+//            viewModel.addLogMessage("All permissions granted")
         } else {
-            viewModel.addLogMessage("Some permissions were denied")
+//            viewModel.addLogMessage("Some permissions were denied")
         }
     }
 

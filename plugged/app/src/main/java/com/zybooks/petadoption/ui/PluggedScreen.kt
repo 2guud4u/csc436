@@ -1,5 +1,6 @@
 package com.zybooks.petadoption.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,6 +25,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Send
+
+
+import androidx.compose.ui.text.font.FontStyle
+
+import java.text.SimpleDateFormat
+import java.util.*
 
 sealed class Routes {
     @Serializable
@@ -127,13 +136,8 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                     composable<Routes.Interact> { backstackEntry ->
                         val details: Routes.Interact = backstackEntry.toRoute()
 
-                        InteractionScreen(viewModel,ipAddress=ipAddress, logMessages)
+                        InteractionScreen(viewModel, ipAddress =ipAddress, logMessages)
 
-//                        Spacer(modifier = Modifier.height(8.dp))
-//
-
-//
-//                        Spacer(modifier = Modifier.height(8.dp))
 //
 //                        DisconnectButton(
 //                            mode = mode,
@@ -155,7 +159,47 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
         }
     }
 }
+@Composable
+fun MessageItem(message: PluggedViewModel.LogMessage) {
+    val dateFormat = remember { SimpleDateFormat("HH:mm:ss", Locale.getDefault()) }
+    val time = dateFormat.format(Date(message.timestamp))
 
+    val backgroundColor = when(message.type) {
+        PluggedViewModel.LogMessage.TYPE_CHAT -> MaterialTheme.colorScheme.surface
+        PluggedViewModel.LogMessage.TYPE_STATUS -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+        PluggedViewModel.LogMessage.TYPE_SYSTEM -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+        PluggedViewModel.LogMessage.TYPE_ERROR -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
+        PluggedViewModel.LogMessage.TYPE_COMMAND -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
+        else -> MaterialTheme.colorScheme.surface
+    }
+
+    val textStyle = when(message.type) {
+        PluggedViewModel.LogMessage.TYPE_SYSTEM -> FontStyle.Italic
+        PluggedViewModel.LogMessage.TYPE_ERROR -> FontStyle.Normal
+        else -> FontStyle.Normal
+    }
+
+    val fontWeight = when(message.type) {
+        PluggedViewModel.LogMessage.TYPE_ERROR -> FontWeight.Bold
+        PluggedViewModel.LogMessage.TYPE_COMMAND -> FontWeight.Bold
+        else -> FontWeight.Normal
+    }
+
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = backgroundColor,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Text(
+            text = message.text,
+            modifier = Modifier.padding(8.dp),
+            fontStyle = textStyle,
+            fontWeight = fontWeight
+        )
+    }
+}
 @Composable
 fun ModeSelectionCard(viewModel: PluggedViewModel, onSelect: (String) -> Unit) {
 
@@ -260,7 +304,7 @@ fun ConnectionSettingsCard(
 fun InteractionScreen(
     viewModel: PluggedViewModel,
     ipAddress: String,
-    logMessages: SnapshotStateList<String>
+    logMessages: SnapshotStateList<PluggedViewModel.LogMessage>
 ){
     val messageToSend by remember { viewModel.messageToSend }
     // Align InteractTopBar to the top-center
@@ -283,22 +327,86 @@ fun InteractionScreen(
         }
     }
 }
-@Composable
-fun LogMessagesCard(logMessages: List<String>) {
-    Card(
 
-    ) {
-        LazyColumn(
+@Composable
+fun TeacherContent(){
+    NotifCard(
+        title = "Question",
+        subtitle = "Anon",
+        description = "I need helppp",
+        imageUrl = "",
+        onDeleteClick = {},
+        isElevated = false,
+    )
+    NotifCard(
+        title = "Question",
+        subtitle = "Anon",
+        description = "I need helppp",
+        imageUrl = "",
+        onDeleteClick = {},
+        isElevated = false,
+    )
+    NotifCard(
+        title = "Question",
+        subtitle = "Anon",
+        description = "I need helppp",
+        imageUrl = "",
+        onDeleteClick = {},
+        isElevated = false,
+    )
+}
+@Composable
+fun StudentContent(){
+    Column() {
+        GenericTextInput(
+            text = "",
+            onTextChange = {},
+            labelText = "Question",
+            buttonText = "Ask!",
+            onButtonClick = {},
+        )
+        GenericTextInput(
+            text = "",
+            onTextChange = {},
+            labelText = "Feedback",
+            buttonText = "Send!",
+            onButtonClick = {},
+        )
+        HorizontalDivider(
+            thickness = 2.dp, // Thicker line
+            color = Color.Gray, // Custom color,
             modifier = Modifier
-        ) {
-            items(logMessages) { message ->
-                Text(
-                    text = message,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
+                .width(370.dp)
+                .padding(vertical = 16.dp)
+        )
+
+        Row() {
+            Button(
+                onClick = {},
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+            ) {
+                Text("Slow Down Please")
+            }
+            Button(
+                onClick = {},
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+            ) {
+                Text("I Am Confused")
             }
         }
-
+    }
+}
+@Composable
+fun LogMessagesCard(logMessages: SnapshotStateList<PluggedViewModel.LogMessage>) {
+    Card(
+    ) {
+        LazyColumn(
+//            state = listState,
+        ) {
+            items(logMessages) { message ->
+                MessageItem(message)
+            }
+        }
     }
 }
 
@@ -319,13 +427,24 @@ fun MessageInputRow(
             label = { Text("Message") },
             modifier = Modifier
                 .weight(1f)
-                .padding(end = 8.dp)
+                .padding(end = 8.dp),
+            maxLines = 3
         )
 
-        Button(
-            onClick = onSendMessage
+        IconButton(
+            onClick = onSendMessage,
+            modifier = Modifier
+                .size(48.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(12.dp)
+                )
         ) {
-            Text("Send")
+            Icon(
+                imageVector = Icons.Default.Send,
+                contentDescription = "Send",
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
         }
     }
 }

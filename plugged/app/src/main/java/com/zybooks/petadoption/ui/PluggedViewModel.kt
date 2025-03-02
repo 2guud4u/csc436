@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.java_websocket.WebSocket
@@ -17,13 +18,18 @@ import java.net.NetworkInterface
 import java.net.URI
 import java.net.URISyntaxException
 import java.nio.ByteBuffer
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class PluggedViewModel : ViewModel() {
     private val TAG = "WebSocketApp"
     private val DEFAULT_PORT = 45678
+    private val gson = Gson()
+    private val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
     // State
-    val logMessages = mutableStateListOf<String>()
+    val logMessages = mutableStateListOf<LogMessage>()
     val connectionMode = mutableStateOf("")
     val serverIp = mutableStateOf("")
     val port = mutableStateOf(DEFAULT_PORT.toString())
@@ -34,22 +40,29 @@ class PluggedViewModel : ViewModel() {
     private var server: MyWebSocketServer? = null
     private var client: MyWebSocketClient? = null
 
+    // Track connected clients for server mode
+    private val connectedClients = mutableStateListOf<WebSocket>()
+
     fun setMode(mode: String) {
         connectionMode.value = mode
-        addLogMessage("Selected $mode mode")
+        addLogMessage(LogMessage("Selected $mode mode", LogMessage.TYPE_SYSTEM))
     }
 
     fun sendMessage(message: String) {
         if (message.isBlank()) return
 
+        val structured = WebSocketMessage.createChatMessage(message)
+
         when {
             server != null -> {
-                server?.broadcast(message)
-                addLogMessage("Broadcast: $message")
+                server?.broadcast(structured)
+                // Add our own message to the log
+                processMessage(structured, "You (broadcast)")
             }
             client != null -> {
-                client?.send(message)
-                addLogMessage("Sent: $message")
+                client?.send(structured)
+                // Add our own message to the log
+                processMessage(structured, "You")
             }
         }
         messageToSend.value = ""
@@ -61,7 +74,7 @@ class PluggedViewModel : ViewModel() {
             startServerInternal(portNum)
             isConnected.value = true
         } catch (e: NumberFormatException) {
-            addLogMessage("Invalid port number")
+            addLogMessage(LogMessage("Invalid port number", LogMessage.TYPE_ERROR))
         }
     }
 
@@ -70,7 +83,7 @@ class PluggedViewModel : ViewModel() {
             try {
                 // Attempt to check if the port is available
                 if (!checkPortAvailability(port)) {
-                    addLogMessage("Port $port is already in use. Try another port.")
+                    addLogMessage(LogMessage("Port $port is already in use. Try another port.", LogMessage.TYPE_ERROR))
                     return@launch
                 }
 
@@ -78,21 +91,21 @@ class PluggedViewModel : ViewModel() {
                 server = MyWebSocketServer(InetSocketAddress("0.0.0.0", port))
                 server?.start()
                 Log.d(TAG, "Server started on port: $port")
-                addLogMessage("Server started on port: $port")
+                addLogMessage(LogMessage("Server started on port: $port", LogMessage.TYPE_SYSTEM))
             } catch (e: Exception) {
                 Log.e(TAG, "Error starting server: ${e.message}")
                 e.printStackTrace()
-                addLogMessage("Error starting server: ${e.message}")
+                addLogMessage(LogMessage("Error starting server: ${e.message}", LogMessage.TYPE_ERROR))
 
                 // Try with higher permissions if on a real device
                 try {
-                    addLogMessage("Attempting with elevated privileges...")
+                    addLogMessage(LogMessage("Attempting with elevated privileges...", LogMessage.TYPE_SYSTEM))
                     val process = Runtime.getRuntime().exec("su")
                     server = MyWebSocketServer(InetSocketAddress("0.0.0.0", port))
                     server?.start()
-                    addLogMessage("Server started with elevated privileges")
+                    addLogMessage(LogMessage("Server started with elevated privileges", LogMessage.TYPE_SYSTEM))
                 } catch (e2: Exception) {
-                    addLogMessage("Could not start server: ${e2.message}")
+                    addLogMessage(LogMessage("Could not start server: ${e2.message}", LogMessage.TYPE_ERROR))
                 }
             }
         }
@@ -112,14 +125,19 @@ class PluggedViewModel : ViewModel() {
     fun stopServer() {
         server?.let {
             try {
+                // Send disconnect message to clients
+                val disconnectMessage = WebSocketMessage.createStatusMessage(WebSocketMessage.STATUS_DISCONNECTED)
+                it.broadcast(disconnectMessage)
+
                 it.stop()
                 server = null
-                addLogMessage("Server stopped")
+                connectedClients.clear()
+                addLogMessage(LogMessage("Server stopped", LogMessage.TYPE_SYSTEM))
                 isConnected.value = false
             } catch (e: Exception) {
                 Log.e(TAG, "Error stopping server: ${e.message}")
                 e.printStackTrace()
-                addLogMessage("Error stopping server: ${e.message}")
+                addLogMessage(LogMessage("Error stopping server: ${e.message}", LogMessage.TYPE_ERROR))
             }
         }
     }
@@ -130,7 +148,7 @@ class PluggedViewModel : ViewModel() {
             connectToServerInternal(serverIpAddress, portNum)
             isConnected.value = true
         } catch (e: NumberFormatException) {
-            addLogMessage("Invalid port number")
+            addLogMessage(LogMessage("Invalid port number", LogMessage.TYPE_ERROR))
         }
     }
 
@@ -141,11 +159,11 @@ class PluggedViewModel : ViewModel() {
                 client = MyWebSocketClient(serverUri)
                 client?.connect()
                 Log.d(TAG, "Connecting to $serverIp:$port")
-                addLogMessage("Connecting to $serverIp:$port")
+                addLogMessage(LogMessage("Connecting to $serverIp:$port", LogMessage.TYPE_SYSTEM))
             } catch (e: URISyntaxException) {
                 Log.e(TAG, "Error connecting to server: ${e.message}")
                 e.printStackTrace()
-                addLogMessage("Error connecting: ${e.message}")
+                addLogMessage(LogMessage("Error connecting: ${e.message}", LogMessage.TYPE_ERROR))
             }
         }
     }
@@ -153,14 +171,18 @@ class PluggedViewModel : ViewModel() {
     fun disconnectFromServer() {
         client?.let {
             try {
+                // Send disconnect message to server
+                val disconnectMessage = WebSocketMessage.createStatusMessage(WebSocketMessage.STATUS_DISCONNECTED)
+                it.send(disconnectMessage)
+
                 it.close()
                 client = null
-                addLogMessage("Disconnected from server")
+                addLogMessage(LogMessage("Disconnected from server", LogMessage.TYPE_SYSTEM))
                 isConnected.value = false
             } catch (e: Exception) {
                 Log.e(TAG, "Error disconnecting: ${e.message}")
                 e.printStackTrace()
-                addLogMessage("Error disconnecting: ${e.message}")
+                addLogMessage(LogMessage("Error disconnecting: ${e.message}", LogMessage.TYPE_ERROR))
             }
         }
     }
@@ -186,13 +208,45 @@ class PluggedViewModel : ViewModel() {
         } catch (e: Exception) {
             Log.e(TAG, "Error getting IP address: ${e.message}")
             e.printStackTrace()
-            addLogMessage("Error getting IP address: ${e.message}")
+            addLogMessage(LogMessage("Error getting IP address: ${e.message}", LogMessage.TYPE_ERROR))
         }
 
         return "Unknown"
     }
 
-    fun addLogMessage(message: String) {
+    // Process incoming WebSocketMessage
+    private fun processMessage(messageJson: String, sender: String) {
+        try {
+            val message = WebSocketMessage.fromJson(messageJson)
+            if (message != null) {
+                val formattedTime = dateFormat.format(Date(message.timestamp))
+
+                when (message.type) {
+                    WebSocketMessage.TYPE_CHAT -> {
+                        addLogMessage(LogMessage("[$formattedTime] $sender: ${message.content}", LogMessage.TYPE_CHAT))
+                    }
+                    WebSocketMessage.TYPE_STATUS -> {
+                        addLogMessage(LogMessage("[$formattedTime] Status update from $sender: ${message.content}", LogMessage.TYPE_STATUS))
+                    }
+                    WebSocketMessage.TYPE_SYSTEM -> {
+                        addLogMessage(LogMessage("[$formattedTime] System message: ${message.content}", LogMessage.TYPE_SYSTEM))
+                    }
+                    WebSocketMessage.TYPE_COMMAND -> {
+                        addLogMessage(LogMessage("[$formattedTime] Command from $sender: ${message.content}", LogMessage.TYPE_COMMAND))
+                        // Handle commands - could add special command handling here
+                    }
+                }
+            } else {
+                // Handle legacy unstructured messages
+                addLogMessage(LogMessage("[$sender] $messageJson", LogMessage.TYPE_CHAT))
+            }
+        } catch (e: Exception) {
+            // If parsing fails, treat as plain text
+            addLogMessage(LogMessage("[$sender] $messageJson", LogMessage.TYPE_CHAT))
+        }
+    }
+
+    fun addLogMessage(message: LogMessage) {
         viewModelScope.launch(Dispatchers.Main) {
             logMessages.add(message)
         }
@@ -202,62 +256,115 @@ class PluggedViewModel : ViewModel() {
         override fun onOpen(conn: WebSocket, handshake: ClientHandshake) {
             val address = conn.remoteSocketAddress.address.hostAddress
             Log.d(TAG, "New connection from: $address")
-            addLogMessage("New connection from: $address")
+
+            // Track the client
+            connectedClients.add(conn)
 
             // Send a welcome message to the client
-            conn.send("Welcome to the server!")
+            val welcomeMessage = WebSocketMessage.createSystemMessage("Welcome to the server!")
+            conn.send(welcomeMessage)
+
+            // Notify everyone about the new connection
+            val connectMessage = WebSocketMessage.createStatusMessage("Client connected from $address")
+            broadcast(connectMessage)
+
+            // Log locally
+            addLogMessage(LogMessage("New connection from: $address", LogMessage.TYPE_STATUS))
         }
 
         override fun onClose(conn: WebSocket, code: Int, reason: String, remote: Boolean) {
-            Log.d(TAG, "Connection closed: $reason")
-            addLogMessage("Connection closed: $reason")
+            val address = conn.remoteSocketAddress?.address?.hostAddress ?: "unknown"
+            Log.d(TAG, "Connection closed from $address: $reason")
+
+            // Remove from tracked clients
+            connectedClients.remove(conn)
+
+            // Notify other clients
+            val disconnectMessage = WebSocketMessage.createStatusMessage("Client disconnected from $address: $reason")
+            broadcast(disconnectMessage)
+
+            addLogMessage(LogMessage("Connection closed from $address: $reason", LogMessage.TYPE_STATUS))
         }
 
         override fun onMessage(conn: WebSocket, message: String) {
-            Log.d(TAG, "Received message: $message")
-            addLogMessage("Received: $message")
+            val address = conn.remoteSocketAddress.address.hostAddress
+            Log.d(TAG, "Received message from $address: $message")
 
-            // Echo the message back to the client
-            conn.send("Server received: $message")
+            // Process the structured message
+            processMessage(message, "Client ($address)")
+
+            // Echo structured messages back to all clients
+            broadcast(message)
         }
 
         override fun onMessage(conn: WebSocket, message: ByteBuffer) {
-            Log.d(TAG, "Received binary message")
-            addLogMessage("Received binary message")
+            val address = conn.remoteSocketAddress.address.hostAddress
+            Log.d(TAG, "Received binary message from $address")
+            addLogMessage(LogMessage("Received binary message from $address", LogMessage.TYPE_SYSTEM))
+
+            // Could handle binary messages here if needed
         }
 
         override fun onError(conn: WebSocket?, ex: Exception) {
-            Log.e(TAG, "Error occurred: ${ex.message}")
+            val address = conn?.remoteSocketAddress?.address?.hostAddress ?: "unknown"
+            Log.e(TAG, "Error occurred with $address: ${ex.message}")
             ex.printStackTrace()
-            addLogMessage("Error: ${ex.message}")
+            addLogMessage(LogMessage("Error with $address: ${ex.message}", LogMessage.TYPE_ERROR))
         }
 
         override fun onStart() {
             Log.d(TAG, "Server started")
-            addLogMessage("Server started successfully")
+            addLogMessage(LogMessage("Server started successfully", LogMessage.TYPE_SYSTEM))
         }
     }
 
     inner class MyWebSocketClient(serverUri: URI) : WebSocketClient(serverUri) {
         override fun onOpen(handshakedata: ServerHandshake) {
             Log.d(TAG, "Connected to server")
-            addLogMessage("Connected to server")
+
+            // Send a connection notification
+            val connectMessage = WebSocketMessage.createStatusMessage(WebSocketMessage.STATUS_CONNECTED)
+            send(connectMessage)
+
+            addLogMessage(LogMessage("Connected to server", LogMessage.TYPE_STATUS))
         }
 
         override fun onMessage(message: String) {
             Log.d(TAG, "Received message: $message")
-            addLogMessage("Received: $message")
+
+            // Process the structured message
+            processMessage(message, "Server")
         }
 
         override fun onClose(code: Int, reason: String, remote: Boolean) {
             Log.d(TAG, "Connection closed: $reason")
-            addLogMessage("Connection closed: $reason")
+            addLogMessage(LogMessage("Connection closed: $reason", LogMessage.TYPE_STATUS))
+
+            // Update UI state if closed by server
+            if (remote) {
+                isConnected.value = false
+            }
         }
 
         override fun onError(ex: Exception) {
             Log.e(TAG, "Error occurred: ${ex.message}")
             ex.printStackTrace()
-            addLogMessage("Error: ${ex.message}")
+            addLogMessage(LogMessage("Error: ${ex.message}", LogMessage.TYPE_ERROR))
+        }
+    }
+
+    // Define message types for logs
+    data class LogMessage(
+        val text: String,
+        val type: Int,
+        val timestamp: Long = System.currentTimeMillis()
+    ) {
+        companion object {
+            const val TYPE_CHAT = 0
+            const val TYPE_STATUS = 1
+            const val TYPE_SYSTEM = 2
+            const val TYPE_ERROR = 3
+            const val TYPE_COMMAND = 4
         }
     }
 
