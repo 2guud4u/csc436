@@ -1,15 +1,46 @@
 package com.zybooks.petadoption.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import kotlinx.serialization.Serializable
+
+sealed class Routes {
+    @Serializable
+    data object Start
+
+    @Serializable
+    data class Connect(
+        val role: String
+    )
+
+    @Serializable
+    data class Interact(
+        val classCode: String,
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,63 +52,84 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
     val messageToSend by remember { viewModel.messageToSend }
     val isConnected by remember { viewModel.isConnected }
     val logMessages = viewModel.logMessages
+    val navController = rememberNavController()
 
     MaterialTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                // App Header
-                Text(
-                    text = "WebSocket Communication",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
 
-                // Mode selection if not connected
-                if (mode.isEmpty()) {
-                    ModeSelectionCard(viewModel)
+            ) {
+                Scaffold(
+                    topBar = {
+                        PluggedTopBar()},
+                    bottomBar = {
+                        PluggedBottomBar()
+
+                    },
+                    floatingActionButton = {
+                        FloatingActionButton(onClick = { }) {
+                            Icon(Icons.Default.Add, contentDescription = "Add")
+                        }
+                    }
+                ) { innerPadding ->
+                    // Main content area with flexible height
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(innerPadding)
+                        ,
+                        contentAlignment = Alignment.Center
+                    ) {
+                NavHost(
+                    navController = navController,
+                    startDestination = Routes.Start
+                ) {
+                    composable<Routes.Start> {
+                        if (mode.isEmpty()) {
+                            ModeSelectionCard(viewModel)
+                        }
+                    }
+                    composable<Routes.Connect> { backstackEntry ->
+                        if (mode.isNotEmpty() && !isConnected) {
+                            ConnectionSettingsCard(
+                                mode = mode,
+                                ipAddress = ipAddress,
+                                serverIp = serverIp,
+                                port = port,
+                                onServerIpChange = { viewModel.serverIp.value = it },
+                                onPortChange = { viewModel.port.value = it },
+                                onStartServer = { viewModel.startServer(port) },
+                                onConnectToServer = { viewModel.connectToServer(serverIp, port) }
+                            )
+                        }
+                    }
+                    composable<Routes.Interact> { backstackEntry ->
+                        val details: Routes.Interact = backstackEntry.toRoute()
+
+
+                        if (mode.isNotEmpty()) {
+                            LogMessagesCard(logMessages = logMessages)
+                    }
+
+                    }
                 }
+
 
                 // Connection settings based on mode
-                if (mode.isNotEmpty() && !isConnected) {
-                    ConnectionSettingsCard(
-                        mode = mode,
-                        ipAddress = ipAddress,
-                        serverIp = serverIp,
-                        port = port,
-                        onServerIpChange = { viewModel.serverIp.value = it },
-                        onPortChange = { viewModel.port.value = it },
-                        onStartServer = { viewModel.startServer(port) },
-                        onConnectToServer = { viewModel.connectToServer(serverIp, port) }
-                    )
-                }
 
-                // Status label
-                if (mode.isNotEmpty()) {
-                    Text(
-                        text = "Status:",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
 
-                // Main content area with flexible height
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                ) {
-                    if (mode.isNotEmpty()) {
-                        LogMessagesCard(logMessages = logMessages)
-                    }
+
+//                    if (mode.isNotEmpty()) {
+//                        LogMessagesCard(logMessages = logMessages)
+//                    }
+                }
                 }
 
                 // Fixed bottom area for message input and disconnect button
@@ -110,39 +162,26 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
 
 @Composable
 fun ModeSelectionCard(viewModel: PluggedViewModel) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "Select Mode",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Button(
-                    onClick = { viewModel.setMode("server") }
+                Text("You are a")
+                Button(onClick = {viewModel.setMode("server")},
+                    colors = ButtonDefaults.buttonColors()
                 ) {
-                    Text("Server Mode")
+                    Text("Teacher!")
                 }
-
-                Button(
-                    onClick = { viewModel.setMode("client") }
-                ) {
-                    Text("Client Mode")
+                Button(onClick = {viewModel.setMode("client")},
+                    colors = ButtonDefaults.buttonColors()) {
+                    Text("Student!")
                 }
             }
-        }
-    }
+
+
+
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -157,16 +196,12 @@ fun ConnectionSettingsCard(
     onStartServer: () -> Unit,
     onConnectToServer: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp)
-    ) {
+
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = if (mode == "server") "Server Settings" else "Client Settings",
+                text = if (mode == "server") "Session Settings" else "Enter Class Info!",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -174,7 +209,7 @@ fun ConnectionSettingsCard(
 
             if (mode == "server") {
                 Text(
-                    text = "Your IP Address: $ipAddress",
+                    text = "Session Ip: $ipAddress",
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -191,13 +226,15 @@ fun ConnectionSettingsCard(
                     onClick = onStartServer,
                     modifier = Modifier.align(Alignment.End)
                 ) {
-                    Text("Start Server")
+                    Text("Start")
                 }
+
+
             } else { // Client mode
                 OutlinedTextField(
                     value = serverIp,
                     onValueChange = onServerIpChange,
-                    label = { Text("Server IP") },
+                    label = { Text("Class IP") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp)
@@ -220,7 +257,7 @@ fun ConnectionSettingsCard(
                 }
             }
         }
-    }
+
 }
 
 @Composable
@@ -281,5 +318,70 @@ fun DisconnectButton(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(if (mode == "server") "Stop Server" else "Disconnect")
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PluggedTopBar(
+    canNavigateBack: Boolean = false,
+    onUpClick: () -> Unit = { },
+){
+    CenterAlignedTopAppBar(
+        title = { Text("Plugged", style = MaterialTheme.typography.titleLarge) },
+        navigationIcon = {
+
+            if (canNavigateBack) {
+                IconButton(onClick = onUpClick) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                }
+            } else{
+                IconButton(onClick = { /* Handle menu */ }) {
+                    Icon(Icons.Default.Menu, contentDescription = "Menu")
+                }
+            }
+        },
+        actions = {
+            IconButton(onClick = { /* Handle settings */ }) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings")
+            }
+        },
+        colors = TopAppBarDefaults.smallTopAppBarColors(
+//            containerColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            titleContentColor = Color.Black,
+            navigationIconContentColor = Color.Black,
+            actionIconContentColor = Color.Black
+        )
+    )
+}
+@Preview
+@Composable
+fun PluggedBottomBar(){
+    BottomAppBar(
+//        containerColor = MaterialTheme.colorScheme.onSecondaryContainer,
+//        contentColor = MaterialTheme.colorScheme.primary,
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center, // Center content horizontally
+            modifier = Modifier.fillMaxWidth(), // Ensure the Row takes up the full width
+            verticalAlignment = Alignment.CenterVertically // Ensure vertical alignment
+        ){
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Person Icon",
+                modifier = Modifier.size(40.dp), // Size of the icon
+                tint = Color.Black // You can change the color here
+            )
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Person Icon",
+                modifier = Modifier.size(40.dp), // Size of the icon
+                tint = Color.Black // You can change the color here
+            )
+        }
+
+
+        // History Icon
+
     }
 }

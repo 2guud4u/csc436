@@ -49,44 +49,37 @@ import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
 
 
-sealed class Routes {
-   @Serializable
-   data object Start
-
-   @Serializable
-   data class Connect(
-      val role: String
-   )
-
-   @Serializable
-   data class Interact(
-      val classCode: String,
-      val role: String
-   )
-
-   @Serializable
-   data class Adopt(
-      val petId: Int
-   )
-}
+//sealed class Routes {
+//   @Serializable
+//   data object Start
+//
+//   @Serializable
+//   data class Connect(
+//      val role: String
+//   )
+//
+//   @Serializable
+//   data class Interact(
+//      val classCode: String,
+//      val role: String
+//   )
+//
+//   @Serializable
+//   data class Adopt(
+//      val petId: Int
+//   )
+//}
 
 
 @Composable
 fun PluggedApp(ipAddress: String) {
    val navController = rememberNavController()
-   val TAG = "Socketty"
+
    NavHost(
       navController = navController,
       startDestination = Routes.Start
    ) {
       composable<Routes.Start> {
-//         ListScreen(
-//            onImageClick = { pet ->
-//               navController.navigate(
-//                  Routes.Detail(pet.id)
-//               )
-//            }
-//         )
          StartScreen(
             onRoleSelected = {
                role -> navController.navigate(
@@ -132,7 +125,6 @@ fun PluggedApp(ipAddress: String) {
 }
 
 //Socket functionality
-
 @Composable
 fun InteractScreen(
    connectionViewModel: ConnectionViewModel = viewModel(),
@@ -384,7 +376,6 @@ fun ConnectScreen(
 
 @Composable
 fun StartScreen(
-   connectionViewModel: ConnectionViewModel = viewModel(),
    onRoleSelected: (String) -> Unit
 ) {
    var presses by remember { mutableIntStateOf(0) }
@@ -434,70 +425,7 @@ fun StartScreen(
 
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PluggedTopBar(
-   canNavigateBack: Boolean = false,
-   onUpClick: () -> Unit = { },
-){
-   CenterAlignedTopAppBar(
-      title = { Text("Plugged", style = MaterialTheme.typography.titleLarge) },
-      navigationIcon = {
 
-         if (canNavigateBack) {
-            IconButton(onClick = onUpClick) {
-               Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-            }
-         } else{
-            IconButton(onClick = { /* Handle menu */ }) {
-               Icon(Icons.Default.Menu, contentDescription = "Menu")
-            }
-         }
-      },
-      actions = {
-         IconButton(onClick = { /* Handle settings */ }) {
-            Icon(Icons.Default.Settings, contentDescription = "Settings")
-         }
-      },
-      colors = TopAppBarDefaults.smallTopAppBarColors(
-         containerColor = MaterialTheme.colorScheme.onSecondaryContainer,
-         titleContentColor = Color.Black,
-         navigationIconContentColor = Color.Black,
-         actionIconContentColor = Color.Black
-      )
-   )
-}
-
-@Composable
-fun PluggedBottomBar(){
-   BottomAppBar(
-      containerColor = MaterialTheme.colorScheme.onSecondaryContainer,
-      contentColor = MaterialTheme.colorScheme.primary,
-   ) {
-      Row(
-         horizontalArrangement = Arrangement.Center, // Center content horizontally
-         modifier = Modifier.fillMaxWidth(), // Ensure the Row takes up the full width
-         verticalAlignment = Alignment.CenterVertically // Ensure vertical alignment
-      ){
-         Icon(
-            imageVector = Icons.Default.Person,
-            contentDescription = "Person Icon",
-            modifier = Modifier.size(40.dp), // Size of the icon
-            tint = Color.Black // You can change the color here
-         )
-         Icon(
-            imageVector = Icons.Default.Settings,
-            contentDescription = "Person Icon",
-            modifier = Modifier.size(40.dp), // Size of the icon
-            tint = Color.Black // You can change the color here
-         )
-      }
-
-
-      // History Icon
-
-   }
-}
 
 
 
