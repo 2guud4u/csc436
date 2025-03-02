@@ -29,15 +29,10 @@ sealed class Routes {
     data object Start
 
     @Serializable
-    data class Connect(
-        val role: String
-    )
+    data object Connect
 
     @Serializable
-    data class Interact(
-        val classCode: String,
-        val role: String
-    )
+    data object Interact
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,7 +91,7 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                                 onSelect={
                                     mode ->
                                     navController.navigate(
-                                        Routes.Connect("hi")
+                                        Routes.Connect
                                     )
                                     viewModel.setMode(mode);
 
@@ -116,19 +111,25 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                                 port = port,
                                 onServerIpChange = { viewModel.serverIp.value = it },
                                 onPortChange = { viewModel.port.value = it },
-                                onStartServer = { viewModel.startServer(port) },
-                                onConnectToServer = { viewModel.connectToServer(serverIp, port) }
+                                onStartServer = { viewModel.startServer(port)
+                                    navController.navigate(
+                                        Routes.Interact
+                                        )},
+                                onConnectToServer = { viewModel.connectToServer(serverIp, port)
+                                    navController.navigate(
+                                        Routes.Interact
+                                    )}
                             )
                         }
-                        Text("you are in connect")
+
                     }
                     composable<Routes.Interact> { backstackEntry ->
                         val details: Routes.Interact = backstackEntry.toRoute()
 
 
-//                        if (mode.isNotEmpty()) {
-//                            LogMessagesCard(logMessages = logMessages)
-//                    }
+                        if (mode.isNotEmpty()) {
+                            LogMessagesCard(logMessages = logMessages)
+                    }
 
                     }
                 }
