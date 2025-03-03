@@ -29,8 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Send
 
 
-import androidx.compose.ui.text.font.FontStyle
-
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -54,7 +52,7 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
     val port by remember { viewModel.port }
 
     val isConnected by remember { viewModel.isConnected }
-    val logMessages = viewModel.logMessages
+    val logMessages = viewModel.questionsList
     val navController = rememberNavController()
 
     MaterialTheme {
@@ -139,16 +137,7 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                         InteractionScreen(viewModel, ipAddress =ipAddress, logMessages)
 
 //
-//                        DisconnectButton(
-//                            mode = mode,
-//                            onDisconnect = {
-//                                if (mode == "server") {
-//                                    viewModel.stopServer()
-//                                } else {
-//                                    viewModel.disconnectFromServer()
-//                                }
-//                            }
-//                        )
+
 
                     }
                 }
@@ -165,40 +154,26 @@ fun MessageItem(message: PluggedViewModel.LogMessage) {
     val time = dateFormat.format(Date(message.timestamp))
 
     val backgroundColor = when(message.type) {
-        PluggedViewModel.LogMessage.TYPE_CHAT -> MaterialTheme.colorScheme.surface
+        PluggedViewModel.LogMessage.TYPE_QUESTION -> MaterialTheme.colorScheme.surface
         PluggedViewModel.LogMessage.TYPE_STATUS -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
         PluggedViewModel.LogMessage.TYPE_SYSTEM -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
         PluggedViewModel.LogMessage.TYPE_ERROR -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
         PluggedViewModel.LogMessage.TYPE_COMMAND -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
         else -> MaterialTheme.colorScheme.surface
     }
-
-    val textStyle = when(message.type) {
-        PluggedViewModel.LogMessage.TYPE_SYSTEM -> FontStyle.Italic
-        PluggedViewModel.LogMessage.TYPE_ERROR -> FontStyle.Normal
-        else -> FontStyle.Normal
-    }
-
-    val fontWeight = when(message.type) {
-        PluggedViewModel.LogMessage.TYPE_ERROR -> FontWeight.Bold
-        PluggedViewModel.LogMessage.TYPE_COMMAND -> FontWeight.Bold
-        else -> FontWeight.Normal
-    }
-
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = backgroundColor,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-    ) {
-        Text(
-            text = message.text,
-            modifier = Modifier.padding(8.dp),
-            fontStyle = textStyle,
-            fontWeight = fontWeight
+    //only log question
+    if (message.type == PluggedViewModel.LogMessage.TYPE_QUESTION){
+        NotifCard(
+            title = "Question",
+            subtitle = "Anon",
+            description = message.text,
+            imageUrl = "",
+            onDeleteClick = {},
+            isElevated = false,
         )
     }
+
+
 }
 @Composable
 fun ModeSelectionCard(viewModel: PluggedViewModel, onSelect: (String) -> Unit) {
@@ -300,13 +275,13 @@ fun ConnectionSettingsCard(
         }
 
 }
+
 @Composable
 fun InteractionScreen(
     viewModel: PluggedViewModel,
     ipAddress: String,
     logMessages: SnapshotStateList<PluggedViewModel.LogMessage>
 ){
-    val messageToSend by remember { viewModel.messageToSend }
     // Align InteractTopBar to the top-center
     InteractTopBar(classCode = ipAddress)
     // Center content in the Box
@@ -315,70 +290,39 @@ fun InteractionScreen(
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize() // Ensure the column fills the available space
     ) {
-        LogMessagesCard(logMessages = logMessages)
-        MessageInputRow(
-            messageToSend = messageToSend,
-            onMessageChange = { viewModel.messageToSend.value = it },
-            onSendMessage = { viewModel.sendMessage(messageToSend) }
-        )
         when(viewModel.connectionMode.value){
-            "client" -> StudentContent()
-            "server" -> TeacherContent()
+            "client" -> StudentContent(viewModel)
+            "server" -> TeacherContent(logMessages)
         }
+        DisconnectButton(
+            mode = viewModel.connectionMode.value,
+            onDisconnect = {
+                if (viewModel.connectionMode.value == "server") {
+                    viewModel.stopServer()
+                } else {
+                    viewModel.disconnectFromServer()
+                }
+            }
+        )
     }
 }
 
 @Composable
-fun TeacherContent(){
-    NotifCard(
-        title = "Question",
-        subtitle = "Anon",
-        description = "I need helppp",
-        imageUrl = "",
-        onDeleteClick = {},
-        isElevated = false,
-    )
-    NotifCard(
-        title = "Question",
-        subtitle = "Anon",
-        description = "I need helppp",
-        imageUrl = "",
-        onDeleteClick = {},
-        isElevated = false,
-    )
-    NotifCard(
-        title = "Question",
-        subtitle = "Anon",
-        description = "I need helppp",
-        imageUrl = "",
-        onDeleteClick = {},
-        isElevated = false,
-    )
+fun TeacherContent(questions: SnapshotStateList<PluggedViewModel.LogMessage>){
+    Card(
+    ) {
+        LazyColumn(
+//            state = listState,
+        ) {
+            items(questions) { message ->
+                MessageItem(message)
+            }
+        }
+    }
 }
 @Composable
-fun StudentContent(){
-    Column() {
-        GenericTextInput(
-            text = "",
-            onTextChange = {},
-            labelText = "Question",
-            buttonText = "Ask!",
-            onButtonClick = {},
-        )
-        GenericTextInput(
-            text = "",
-            onTextChange = {},
-            labelText = "Feedback",
-            buttonText = "Send!",
-            onButtonClick = {},
-        )
-        HorizontalDivider(
-            thickness = 2.dp, // Thicker line
-            color = Color.Gray, // Custom color,
-            modifier = Modifier
-                .width(370.dp)
-                .padding(vertical = 16.dp)
-        )
+fun StudentContent(viewModel: PluggedViewModel,){
+    val messageToSend by remember { viewModel.messageToSend }
 
         Row() {
             Button(
@@ -394,21 +338,22 @@ fun StudentContent(){
                 Text("I Am Confused")
             }
         }
-    }
-}
-@Composable
-fun LogMessagesCard(logMessages: SnapshotStateList<PluggedViewModel.LogMessage>) {
-    Card(
-    ) {
-        LazyColumn(
-//            state = listState,
-        ) {
-            items(logMessages) { message ->
-                MessageItem(message)
-            }
+        HorizontalDivider(
+            thickness = 2.dp, // Thicker line
+            color = Color.Gray, // Custom color,
+            modifier = Modifier
+                .width(370.dp)
+                .padding(vertical = 16.dp)
+        )
+        Column() {
+            MessageInputRow(
+                messageToSend = messageToSend,
+                onMessageChange = { viewModel.messageToSend.value = it },
+                onSendMessage = { viewModel.sendMessage(messageToSend) }
+            )
         }
-    }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

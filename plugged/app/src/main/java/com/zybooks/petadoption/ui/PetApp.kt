@@ -125,54 +125,54 @@ fun PluggedApp(ipAddress: String) {
 }
 
 //Socket functionality
-@Composable
-fun InteractScreen(
-   connectionViewModel: ConnectionViewModel = viewModel(),
-   onUpClick: () -> Unit = { },
-   classCode: String,
-   role: String
-) {
-   var presses by remember { mutableIntStateOf(0) }
-
-   Scaffold(
-      topBar = {
-         PluggedTopBar(
-            canNavigateBack = true,
-            onUpClick = onUpClick
-         )
-      },
-      bottomBar = {
-         PluggedBottomBar()
-      },
-      floatingActionButton = {
-         FloatingActionButton(onClick = { presses++ }) {
-            Icon(Icons.Default.Add, contentDescription = "Add")
-         }
-      }
-   ) { innerPadding ->
-      Box(
-         modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(innerPadding)
-      ) {
-         // Align InteractTopBar to the top-center
-         InteractTopBar(classCode = classCode)
-         // Center content in the Box
-         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize().align(Alignment.Center) // Ensure the column fills the available space
-         ) {
-            when(role){
-               "student" -> StudentContent()
-               "teacher" -> TeacherContent()
-
-            }
-         }
-      }
-   }
-}
+//@Composable
+//fun InteractScreen(
+//   connectionViewModel: ConnectionViewModel = viewModel(),
+//   onUpClick: () -> Unit = { },
+//   classCode: String,
+//   role: String
+//) {
+//   var presses by remember { mutableIntStateOf(0) }
+//
+//   Scaffold(
+//      topBar = {
+//         PluggedTopBar(
+//            canNavigateBack = true,
+//            onUpClick = onUpClick
+//         )
+//      },
+//      bottomBar = {
+//         PluggedBottomBar()
+//      },
+//      floatingActionButton = {
+//         FloatingActionButton(onClick = { presses++ }) {
+//            Icon(Icons.Default.Add, contentDescription = "Add")
+//         }
+//      }
+//   ) { innerPadding ->
+//      Box(
+//         modifier = Modifier
+//            .fillMaxSize()
+//            .background(MaterialTheme.colorScheme.primaryContainer)
+//            .padding(innerPadding)
+//      ) {
+//         // Align InteractTopBar to the top-center
+//         InteractTopBar(classCode = classCode)
+//         // Center content in the Box
+//         Column(
+//            horizontalAlignment = Alignment.CenterHorizontally,
+//            verticalArrangement = Arrangement.Center,
+//            modifier = Modifier.fillMaxSize().align(Alignment.Center) // Ensure the column fills the available space
+//         ) {
+//            when(role){
+//               "student" -> StudentContent()
+//               "teacher" -> TeacherContent()
+//
+//            }
+//         }
+//      }
+//   }
+//}
 
 
 @Composable
