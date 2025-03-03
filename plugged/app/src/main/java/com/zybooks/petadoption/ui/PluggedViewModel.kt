@@ -16,6 +16,7 @@ import org.java_websocket.handshake.ServerHandshake
 import org.java_websocket.server.WebSocketServer
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
+import java.net.ServerSocket
 import java.net.URI
 import java.net.URISyntaxException
 import java.nio.ByteBuffer
@@ -31,6 +32,7 @@ class PluggedViewModel : ViewModel() {
 
     // State
     val questionsList = mutableStateListOf<LogMessage>()
+    val poll = mutableStateOf<LogMessage?>(null)
     val connectionMode = mutableStateOf("")
     val serverIp = mutableStateOf("")
     val port = mutableStateOf(DEFAULT_PORT.toString())
@@ -120,7 +122,7 @@ class PluggedViewModel : ViewModel() {
 
     private fun checkPortAvailability(port: Int): Boolean {
         return try {
-            val serverSocket = java.net.ServerSocket(port)
+            val serverSocket = ServerSocket(port)
             serverSocket.close()
             true
         } catch (e: Exception) {

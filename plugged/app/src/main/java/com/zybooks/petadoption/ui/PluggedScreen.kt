@@ -2,6 +2,7 @@ package com.zybooks.petadoption.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -188,7 +189,6 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
 }
 @Composable
 fun MessageItem(message: PluggedViewModel.LogMessage, onDeleteClick: ()-> Unit) {
-    val dateFormat = remember { SimpleDateFormat("HH:mm:ss", Locale.getDefault()) }
 
     //only log question
     if (message.type == PluggedViewModel.LogMessage.TYPE_QUESTION){
@@ -329,50 +329,76 @@ fun InteractionScreen(
     logMessages: SnapshotStateList<PluggedViewModel.LogMessage>,
     onDisconnect: () -> Unit
 ){
+    Column{
     // Align InteractTopBar to the top-center
-    InteractTopBar(classCode = viewModel.connectedIp.value, viewModel.serverSize.intValue)
-    // Center content in the Box
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize() // Ensure the column fills the available space
-    ) {
-        when(viewModel.connectionMode.value){
-            "client" -> StudentContent(viewModel)
-            "server" -> TeacherContent(viewModel)
-        }
-        DisconnectButton(
-            mode = viewModel.connectionMode.value,
-            onDisconnect = {
-                if (viewModel.connectionMode.value == "server") {
-                    viewModel.stopServer()
-                } else {
-                    viewModel.disconnectFromServer()
-                }
-                onDisconnect()
+        InteractTopBar(classCode = viewModel.connectedIp.value, viewModel.serverSize.intValue)
+        // Center content in the Box
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
 
+        ) {
+            when(viewModel.connectionMode.value){
+                "client" -> StudentContent(viewModel)
+                "server" -> TeacherContent(viewModel)
             }
-        )
+            Spacer(modifier = Modifier.weight(1f))
+            DisconnectButton(
+                mode = viewModel.connectionMode.value,
+                onDisconnect = {
+                    if (viewModel.connectionMode.value == "server") {
+                        viewModel.stopServer()
+                    } else {
+                        viewModel.disconnectFromServer()
+                    }
+                    onDisconnect()
+
+                }
+            )
+        }
     }
 }
 
 @Composable
 fun TeacherContent(viewModel: PluggedViewModel){
-    Card(
-    ) {
-        LazyColumn(
-//            state = listState,
+
+        Column(
         ) {
-            itemsIndexed(viewModel.questionsList) { index ,message ->
-                MessageItem(message, {viewModel.removeQuestion(index)})
+
+            Button(onClick = {
+
+            }) {
+                Text("Comprehension Check")
+            }
+
+            HorizontalDivider(
+                thickness = 2.dp, // Thicker line
+                color = Color.Gray, // Custom color,
+                modifier = Modifier
+                    .width(370.dp)
+                    .padding(vertical = 16.dp)
+            )
+
+
+            Card(
+
+            ) {
+                LazyColumn(
+//            state = listState,
+                ) {
+                    itemsIndexed(viewModel.questionsList) { index, message ->
+                        MessageItem(message, { viewModel.removeQuestion(index) })
+                    }
+                }
             }
         }
-    }
+
+
 }
 @Composable
 fun StudentContent(viewModel: PluggedViewModel){
     val messageToSend by remember { viewModel.messageToSend }
-
+        Column() {
         Row() {
             Button(
                 onClick = {},
@@ -401,6 +427,7 @@ fun StudentContent(viewModel: PluggedViewModel){
                 onSendMessage = { viewModel.sendMessage(messageToSend) }
             )
         }
+            }
 }
 
 
@@ -450,7 +477,7 @@ fun DisconnectButton(
 ) {
     Button(
         onClick = onDisconnect,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
     ) {
         Text(if (mode == "server") "Stop Server" else "Disconnect")
     }
