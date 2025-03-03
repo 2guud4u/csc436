@@ -445,7 +445,7 @@ fun MessageInputRow(
         OutlinedTextField(
             value = messageToSend,
             onValueChange = onMessageChange,
-            label = { Text("Message") },
+            label = { Text("Question") },
             modifier = Modifier
                 .weight(1f)
                 .padding(end = 8.dp),
