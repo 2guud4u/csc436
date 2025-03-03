@@ -224,7 +224,42 @@ fun ModeSelectionScreen(viewModel: PluggedViewModel, onSelect: (String) -> Unit)
                 }
             }
 }
+@Composable
+fun InteractTopBar(
+    classCode: String,
+    count: Int = 0,
+) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp)
 
+    ) {
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            ,horizontalArrangement = Arrangement.SpaceBetween,) {
+            Column() {
+                Text(
+                    text = "Class IP",
+                    style = MaterialTheme.typography.titleSmall, // Making it small
+                )
+                Text(
+                    text = classCode,
+                    style = MaterialTheme.typography.titleLarge,
+                )
+
+            }
+            PeopleCount(count)
+        }
+        HorizontalDivider(
+            modifier = Modifier.padding(horizontal = 16.dp), // Adds padding on the sides
+            thickness = 2.dp, // Thicker line
+            color = Color.Gray // Custom color
+        )
+
+    }
+
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConnectionSettingsScreen(

@@ -1,5 +1,4 @@
 package com.zybooks.petadoption.ui
-
 import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -337,6 +336,7 @@ class PluggedViewModel : ViewModel() {
 
         override fun onStart() {
             Log.d(TAG, "Server started")
+            isConnected.value = true
             addQuestions(LogMessage("Server started successfully", LogMessage.TYPE_SYSTEM))
         }
     }
@@ -344,7 +344,7 @@ class PluggedViewModel : ViewModel() {
     inner class MyWebSocketClient(serverUri: URI) : WebSocketClient(serverUri) {
         override fun onOpen(handshakedata: ServerHandshake) {
             Log.d(TAG, "Connected to server")
-
+            isConnected.value = true
             // Send a connection notification
             val connectMessage = WebSocketMessage.createStatusMessage(WebSocketMessage.STATUS_CONNECTED)
             send(connectMessage)
