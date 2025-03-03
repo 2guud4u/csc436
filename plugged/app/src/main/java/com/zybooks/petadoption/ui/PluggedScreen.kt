@@ -3,7 +3,6 @@ package com.zybooks.petadoption.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -24,10 +23,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Send
+import kotlinx.coroutines.launch
 
 
 import java.text.SimpleDateFormat
@@ -48,6 +47,9 @@ sealed class Routes {
 @Composable
 fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
     // Collect state from ViewModel
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val mode by remember { viewModel.connectionMode }
     val serverIp by remember { viewModel.serverIp }
     val port by remember { viewModel.port }
@@ -56,6 +58,11 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
     val logMessages = viewModel.questionsList
     val navController = rememberNavController()
 
+    fun postSnackBar(msg: String){
+        scope.launch {
+            snackbarHostState.showSnackbar(msg)
+        }
+    }
     MaterialTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -68,6 +75,9 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
 
             ) {
                 Scaffold(
+                    snackbarHost = {
+                        SnackbarHost(hostState = snackbarHostState)
+                    },
                     topBar = {
                         PluggedTopBar()},
                     bottomBar = {
@@ -75,7 +85,8 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
 
                     },
                     floatingActionButton = {
-                        FloatingActionButton(onClick = { }) {
+                        FloatingActionButton(onClick = { postSnackBar("floaty")
+                        }) {
                             Icon(Icons.Default.Add, contentDescription = "Add")
                         }
                     }
@@ -94,20 +105,20 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                     startDestination = Routes.Start
                 ) {
                     composable<Routes.Start> {
-                        if (mode.isEmpty()) {
-                            ModeSelectionScreen(
-                                viewModel,
-                                onSelect={
-                                    mode ->
-                                    navController.navigate(
-                                        Routes.Connect
-                                    )
-                                    viewModel.setMode(mode);
 
-                                }
-
+                    ModeSelectionScreen(
+                        viewModel,
+                        onSelect={
+                            mode ->
+                            navController.navigate(
+                                Routes.Connect
                             )
+                            viewModel.setMode(mode);
+
                         }
+
+                    )
+
 
                     }
 
@@ -120,30 +131,51 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                                 port = port,
                                 onServerIpChange = { viewModel.serverIp.value = it },
                                 onPortChange = { viewModel.port.value = it },
-                                onStartServer = { viewModel.startServer(port, ipAddress)
+                                onStartServer = { viewModel.startServer(
+                                    port, ipAddress,
+                                    postSnackBar = {msg -> postSnackBar(msg)}
+                                )
                                     navController.navigate(
                                         Routes.Interact
                                         )},
-                                onConnectToServer = { viewModel.connectToServer(serverIp, port)
+                                onConnectToServer = { viewModel.connectToServer(serverIp, port, postSnackBar = {msg -> postSnackBar(msg)})
                                     navController.navigate(
                                         Routes.Interact
-                                    )}
+                                    )},
+                                onBack = {navController.navigate(
+                                    Routes.Start
+                                )}
+
 
                             )
                         }
 
                     }
                     composable<Routes.Interact> { backstackEntry ->
-                        val details: Routes.Interact = backstackEntry.toRoute()
-
-                        InteractionScreen(viewModel, ipAddress =ipAddress,
-                            logMessages,
-                            onDisconnect={
-                                navController.navigate(
-                                    Routes.Start
-                                )
+                        if(viewModel.isConnected.value){
+                            InteractionScreen(viewModel, ipAddress =ipAddress,
+                                logMessages,
+                                onDisconnect={
+                                    navController.navigate(
+                                        Routes.Start
+                                    )
+                                    viewModel.connectionMode.value = ("")
+                                }
+                            )
+                        } else{
+                            Column {
+                                Text("Connection Failed")
+                                Button(
+                                    onClick = {navController.navigate(
+                                        Routes.Start
+                                    )}
+                                ) {
+                                    Text("Try Again")
+                                }
                             }
-                        )
+
+                        }
+
 
                     }
                 }
@@ -203,7 +235,8 @@ fun ConnectionSettingsScreen(
     onServerIpChange: (String) -> Unit,
     onPortChange: (String) -> Unit,
     onStartServer: () -> Unit,
-    onConnectToServer: () -> Unit
+    onConnectToServer: () -> Unit,
+    onBack: ()-> Unit
 ) {
 
         Column(
@@ -230,13 +263,23 @@ fun ConnectionSettingsScreen(
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
                 )
-
-                Button(
-                    onClick = onStartServer,
-                    modifier = Modifier.align(Alignment.End)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Start")
+                    Button(
+                        onClick = onBack
+                    ) {
+                        Text("Back")
+                    }
+
+                    Button(
+                        onClick = onStartServer
+                    ) {
+                        Text("Start")
+                    }
                 }
+
 
 
             } else { // Client mode
@@ -257,13 +300,23 @@ fun ConnectionSettingsScreen(
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
                 )
-
-                Button(
-                    onClick = onConnectToServer,
-                    modifier = Modifier.align(Alignment.End)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Connect")
+                    Button(
+                        onClick = onBack
+                    ) {
+                        Text("Back")
+                    }
+
+                    Button(
+                        onClick = onConnectToServer
+                    ) {
+                        Text("Start")
+                    }
                 }
+
             }
         }
 
@@ -277,7 +330,7 @@ fun InteractionScreen(
     onDisconnect: () -> Unit
 ){
     // Align InteractTopBar to the top-center
-    InteractTopBar(classCode = viewModel.connectedIp.value)
+    InteractTopBar(classCode = viewModel.connectedIp.value, viewModel.serverSize.intValue)
     // Center content in the Box
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -296,6 +349,7 @@ fun InteractionScreen(
                 } else {
                     viewModel.disconnectFromServer()
                 }
+                onDisconnect()
 
             }
         )

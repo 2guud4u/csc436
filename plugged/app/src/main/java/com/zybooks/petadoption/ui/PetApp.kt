@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -178,7 +179,7 @@ fun PluggedApp(ipAddress: String) {
 @Composable
 fun InteractTopBar(
    classCode: String,
-
+   count: Int = 0,
    ) {
    Column(modifier = Modifier
       .fillMaxWidth()
@@ -200,7 +201,7 @@ fun InteractTopBar(
             )
 
          }
-         GenericAvatar()
+         PeopleCount(count)
       }
       HorizontalDivider(
          modifier = Modifier.padding(horizontal = 16.dp), // Adds padding on the sides
@@ -211,6 +212,7 @@ fun InteractTopBar(
    }
 
 }
+
 @Composable
 fun ConnectScreen(
    connectionViewModel: ConnectionViewModel = viewModel(),

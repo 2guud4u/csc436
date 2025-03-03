@@ -13,14 +13,16 @@ data class WebSocketMessage(
 ) {
     companion object {
 
+
         private val gson = Gson()
 
         // Message types
-        const val TYPE_FEEDBACK = "FEEDBACK"
+
         const val TYPE_QUESTION = "CHAT"
         const val TYPE_STATUS = "STATUS"
         const val TYPE_SYSTEM = "SYSTEM"
         const val TYPE_COMMAND = "COMMAND"
+        const val TYPE_FEEDBACK = "FEEDBACK"
 
         // Status types
         const val STATUS_CONNECTED = "CONNECTED"

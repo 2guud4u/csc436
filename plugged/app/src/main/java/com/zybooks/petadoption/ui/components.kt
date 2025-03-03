@@ -55,6 +55,38 @@ fun GenericAvatar(size: Int = 48) {
         }
     }
 }
+@Composable
+fun PeopleCount(count: Int) {
+
+
+
+        BadgedBox(
+            badge = {
+                if (count > 0) {
+                    Badge(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
+                    ) {
+                        Text("$count")
+                    }
+                }
+            }
+        ) {
+            Surface(
+                modifier = Modifier.size(35.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer // Background color
+            ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Avatar",
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+
+
+    }
+}
 
 @Composable
 fun RefreshButton(onRefresh: () -> Unit) {

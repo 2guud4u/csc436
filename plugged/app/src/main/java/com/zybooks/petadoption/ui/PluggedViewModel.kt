@@ -1,6 +1,7 @@
 package com.zybooks.petadoption.ui
 
 import android.util.Log
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -36,6 +37,8 @@ class PluggedViewModel : ViewModel() {
     val messageToSend = mutableStateOf("")
     val isConnected = mutableStateOf(false)
     val connectedIp = mutableStateOf("")
+    val serverSize = mutableIntStateOf(0)
+
 
     // WebSocket components
     private var server: MyWebSocketServer? = null
@@ -69,23 +72,24 @@ class PluggedViewModel : ViewModel() {
         messageToSend.value = ""
     }
 
-    fun startServer(portNumber: String, ipAddress: String) {
+    fun startServer(portNumber: String, ipAddress: String, postSnackBar: (String)->Unit) {
         try {
             val portNum = portNumber.toInt()
-            startServerInternal(portNum)
+            startServerInternal(portNum, postSnackBar)
             isConnected.value = true
             connectedIp.value = ipAddress
+
         } catch (e: NumberFormatException) {
             addQuestions(LogMessage("Invalid port number", LogMessage.TYPE_ERROR))
         }
     }
 
-    private fun startServerInternal(port: Int) {
+    private fun startServerInternal(port: Int, postSnackBar: (String)->Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // Attempt to check if the port is available
                 if (!checkPortAvailability(port)) {
-                    addQuestions(LogMessage("Port $port is already in use. Try another port.", LogMessage.TYPE_ERROR))
+                    postSnackBar("Port $port is already in use. Try another port.")
                     return@launch
                 }
 
@@ -93,6 +97,7 @@ class PluggedViewModel : ViewModel() {
                 server = MyWebSocketServer(InetSocketAddress("0.0.0.0", port))
                 server?.start()
                 Log.d(TAG, "Server started on port: $port")
+                postSnackBar("Server Started!")
                 addQuestions(LogMessage("Server started on port: $port", LogMessage.TYPE_SYSTEM))
             } catch (e: Exception) {
                 Log.e(TAG, "Error starting server: ${e.message}")
@@ -144,30 +149,29 @@ class PluggedViewModel : ViewModel() {
         }
     }
 
-    fun connectToServer(serverIpAddress: String, portNumber: String) {
+    fun connectToServer(serverIpAddress: String, portNumber: String, postSnackBar: (String)->Unit) {
         try {
             val portNum = portNumber.toInt()
-            connectToServerInternal(serverIpAddress, portNum)
+            connectToServerInternal(serverIpAddress, portNum, postSnackBar)
             isConnected.value = true
             connectedIp.value = serverIp.value
+
         } catch (e: NumberFormatException) {
-            addQuestions(LogMessage("Invalid port number", LogMessage.TYPE_ERROR))
+            postSnackBar("Connection Error!, make sure port and ip is correct")
         }
     }
 
-    private fun connectToServerInternal(serverIp: String, port: Int) {
+    private fun connectToServerInternal(serverIp: String, port: Int, postSnackBar: (String)->Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val serverUri = URI("ws://$serverIp:$port")
                 client = MyWebSocketClient(serverUri)
                 client?.connect()
                 Log.d(TAG, "Connecting to $serverIp:$port")
-                addQuestions(LogMessage("Connecting to $serverIp:$port", LogMessage.TYPE_SYSTEM))
 
             } catch (e: URISyntaxException) {
                 Log.e(TAG, "Error connecting to server: ${e.message}")
                 e.printStackTrace()
-                addQuestions(LogMessage("Error connecting: ${e.message}", LogMessage.TYPE_ERROR))
             }
         }
     }
@@ -230,7 +234,11 @@ class PluggedViewModel : ViewModel() {
                         addQuestions(LogMessage("${message.content}", LogMessage.TYPE_QUESTION))
                     }
                     WebSocketMessage.TYPE_STATUS -> {
-                        addQuestions(LogMessage("[$formattedTime] Status update from $sender: ${message.content}", LogMessage.TYPE_STATUS))
+                        if(message.content == "CONNECTED"){
+                            serverSize.intValue += 1
+                        } else {
+                            serverSize.intValue -= 1
+                        }
                     }
                     WebSocketMessage.TYPE_SYSTEM -> {
                         addQuestions(LogMessage("[$formattedTime] System message: ${message.content}", LogMessage.TYPE_SYSTEM))
@@ -357,12 +365,14 @@ class PluggedViewModel : ViewModel() {
             if (remote) {
                 isConnected.value = false
             }
+
         }
 
         override fun onError(ex: Exception) {
             Log.e(TAG, "Error occurred: ${ex.message}")
             ex.printStackTrace()
             addQuestions(LogMessage("Error: ${ex.message}", LogMessage.TYPE_ERROR))
+            isConnected.value = false
         }
     }
 
