@@ -35,6 +35,7 @@ class PluggedViewModel : ViewModel() {
     val port = mutableStateOf(DEFAULT_PORT.toString())
     val messageToSend = mutableStateOf("")
     val isConnected = mutableStateOf(false)
+    val connectedIp = mutableStateOf("")
 
     // WebSocket components
     private var server: MyWebSocketServer? = null
@@ -68,11 +69,12 @@ class PluggedViewModel : ViewModel() {
         messageToSend.value = ""
     }
 
-    fun startServer(portNumber: String) {
+    fun startServer(portNumber: String, ipAddress: String) {
         try {
             val portNum = portNumber.toInt()
             startServerInternal(portNum)
             isConnected.value = true
+            connectedIp.value = ipAddress
         } catch (e: NumberFormatException) {
             addQuestions(LogMessage("Invalid port number", LogMessage.TYPE_ERROR))
         }
@@ -147,6 +149,7 @@ class PluggedViewModel : ViewModel() {
             val portNum = portNumber.toInt()
             connectToServerInternal(serverIpAddress, portNum)
             isConnected.value = true
+            connectedIp.value = serverIp.value
         } catch (e: NumberFormatException) {
             addQuestions(LogMessage("Invalid port number", LogMessage.TYPE_ERROR))
         }
@@ -160,6 +163,7 @@ class PluggedViewModel : ViewModel() {
                 client?.connect()
                 Log.d(TAG, "Connecting to $serverIp:$port")
                 addQuestions(LogMessage("Connecting to $serverIp:$port", LogMessage.TYPE_SYSTEM))
+
             } catch (e: URISyntaxException) {
                 Log.e(TAG, "Error connecting to server: ${e.message}")
                 e.printStackTrace()
@@ -223,7 +227,7 @@ class PluggedViewModel : ViewModel() {
 
                 when (message.type) {
                     WebSocketMessage.TYPE_QUESTION -> {
-                        addQuestions(LogMessage("[$formattedTime] $sender: ${message.content}", LogMessage.TYPE_QUESTION))
+                        addQuestions(LogMessage("${message.content}", LogMessage.TYPE_QUESTION))
                     }
                     WebSocketMessage.TYPE_STATUS -> {
                         addQuestions(LogMessage("[$formattedTime] Status update from $sender: ${message.content}", LogMessage.TYPE_STATUS))
@@ -235,6 +239,9 @@ class PluggedViewModel : ViewModel() {
                         addQuestions(LogMessage("[$formattedTime] Command from $sender: ${message.content}", LogMessage.TYPE_COMMAND))
                         // Handle commands - could add special command handling here
                     }
+//                    WebSocketMessage.Type_FEEDBACK -> {
+//
+//                    }
                 }
             } else {
                 // Handle legacy unstructured messages
@@ -249,6 +256,12 @@ class PluggedViewModel : ViewModel() {
     fun addQuestions(message: LogMessage) {
         viewModelScope.launch(Dispatchers.Main) {
             questionsList.add(message)
+        }
+    }
+
+    fun removeQuestion(index: Int) {
+        viewModelScope.launch(Dispatchers.Main) {
+            questionsList.removeAt(index)
         }
     }
 

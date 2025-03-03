@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -94,7 +95,7 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                 ) {
                     composable<Routes.Start> {
                         if (mode.isEmpty()) {
-                            ModeSelectionCard(
+                            ModeSelectionScreen(
                                 viewModel,
                                 onSelect={
                                     mode ->
@@ -112,14 +113,14 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
 
                     composable<Routes.Connect> { backstackEntry ->
                         if (mode.isNotEmpty() && !isConnected) {
-                            ConnectionSettingsCard(
+                            ConnectionSettingsScreen(
                                 mode = mode,
                                 ipAddress = ipAddress,
                                 serverIp = serverIp,
                                 port = port,
                                 onServerIpChange = { viewModel.serverIp.value = it },
                                 onPortChange = { viewModel.port.value = it },
-                                onStartServer = { viewModel.startServer(port)
+                                onStartServer = { viewModel.startServer(port, ipAddress)
                                     navController.navigate(
                                         Routes.Interact
                                         )},
@@ -127,6 +128,7 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                                     navController.navigate(
                                         Routes.Interact
                                     )}
+
                             )
                         }
 
@@ -134,10 +136,14 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
                     composable<Routes.Interact> { backstackEntry ->
                         val details: Routes.Interact = backstackEntry.toRoute()
 
-                        InteractionScreen(viewModel, ipAddress =ipAddress, logMessages)
-
-//
-
+                        InteractionScreen(viewModel, ipAddress =ipAddress,
+                            logMessages,
+                            onDisconnect={
+                                navController.navigate(
+                                    Routes.Start
+                                )
+                            }
+                        )
 
                     }
                 }
@@ -149,18 +155,9 @@ fun PluggedScreen(viewModel: PluggedViewModel, ipAddress: String) {
     }
 }
 @Composable
-fun MessageItem(message: PluggedViewModel.LogMessage) {
+fun MessageItem(message: PluggedViewModel.LogMessage, onDeleteClick: ()-> Unit) {
     val dateFormat = remember { SimpleDateFormat("HH:mm:ss", Locale.getDefault()) }
-    val time = dateFormat.format(Date(message.timestamp))
 
-    val backgroundColor = when(message.type) {
-        PluggedViewModel.LogMessage.TYPE_QUESTION -> MaterialTheme.colorScheme.surface
-        PluggedViewModel.LogMessage.TYPE_STATUS -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
-        PluggedViewModel.LogMessage.TYPE_SYSTEM -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
-        PluggedViewModel.LogMessage.TYPE_ERROR -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
-        PluggedViewModel.LogMessage.TYPE_COMMAND -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
-        else -> MaterialTheme.colorScheme.surface
-    }
     //only log question
     if (message.type == PluggedViewModel.LogMessage.TYPE_QUESTION){
         NotifCard(
@@ -168,7 +165,7 @@ fun MessageItem(message: PluggedViewModel.LogMessage) {
             subtitle = "Anon",
             description = message.text,
             imageUrl = "",
-            onDeleteClick = {},
+            onDeleteClick = onDeleteClick,
             isElevated = false,
         )
     }
@@ -176,7 +173,7 @@ fun MessageItem(message: PluggedViewModel.LogMessage) {
 
 }
 @Composable
-fun ModeSelectionCard(viewModel: PluggedViewModel, onSelect: (String) -> Unit) {
+fun ModeSelectionScreen(viewModel: PluggedViewModel, onSelect: (String) -> Unit) {
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -194,15 +191,11 @@ fun ModeSelectionCard(viewModel: PluggedViewModel, onSelect: (String) -> Unit) {
                     Text("Student!")
                 }
             }
-
-
-
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConnectionSettingsCard(
+fun ConnectionSettingsScreen(
     mode: String,
     ipAddress: String,
     serverIp: String,
@@ -280,10 +273,11 @@ fun ConnectionSettingsCard(
 fun InteractionScreen(
     viewModel: PluggedViewModel,
     ipAddress: String,
-    logMessages: SnapshotStateList<PluggedViewModel.LogMessage>
+    logMessages: SnapshotStateList<PluggedViewModel.LogMessage>,
+    onDisconnect: () -> Unit
 ){
     // Align InteractTopBar to the top-center
-    InteractTopBar(classCode = ipAddress)
+    InteractTopBar(classCode = viewModel.connectedIp.value)
     // Center content in the Box
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -292,7 +286,7 @@ fun InteractionScreen(
     ) {
         when(viewModel.connectionMode.value){
             "client" -> StudentContent(viewModel)
-            "server" -> TeacherContent(logMessages)
+            "server" -> TeacherContent(viewModel)
         }
         DisconnectButton(
             mode = viewModel.connectionMode.value,
@@ -302,38 +296,39 @@ fun InteractionScreen(
                 } else {
                     viewModel.disconnectFromServer()
                 }
+
             }
         )
     }
 }
 
 @Composable
-fun TeacherContent(questions: SnapshotStateList<PluggedViewModel.LogMessage>){
+fun TeacherContent(viewModel: PluggedViewModel){
     Card(
     ) {
         LazyColumn(
 //            state = listState,
         ) {
-            items(questions) { message ->
-                MessageItem(message)
+            itemsIndexed(viewModel.questionsList) { index ,message ->
+                MessageItem(message, {viewModel.removeQuestion(index)})
             }
         }
     }
 }
 @Composable
-fun StudentContent(viewModel: PluggedViewModel,){
+fun StudentContent(viewModel: PluggedViewModel){
     val messageToSend by remember { viewModel.messageToSend }
 
         Row() {
             Button(
                 onClick = {},
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                colors = ButtonDefaults.buttonColors(),
             ) {
                 Text("Slow Down Please")
             }
             Button(
                 onClick = {},
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                colors = ButtonDefaults.buttonColors(),
             ) {
                 Text("I Am Confused")
             }

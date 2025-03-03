@@ -12,9 +12,11 @@ data class WebSocketMessage(
     @SerializedName("content") val content: String = ""
 ) {
     companion object {
+
         private val gson = Gson()
 
         // Message types
+        const val TYPE_FEEDBACK = "FEEDBACK"
         const val TYPE_QUESTION = "CHAT"
         const val TYPE_STATUS = "STATUS"
         const val TYPE_SYSTEM = "SYSTEM"
@@ -36,10 +38,10 @@ data class WebSocketMessage(
         fun createSystemMessage(content: String): String {
             return gson.toJson(WebSocketMessage(TYPE_SYSTEM, content = content))
         }
-
-        fun createCommandMessage(command: String): String {
-            return gson.toJson(WebSocketMessage(TYPE_COMMAND, content = command))
+        fun createFeedbackMessage(content: String): String {
+            return gson.toJson(WebSocketMessage(TYPE_FEEDBACK, content = content))
         }
+
 
         fun fromJson(json: String): WebSocketMessage? {
             return try {
