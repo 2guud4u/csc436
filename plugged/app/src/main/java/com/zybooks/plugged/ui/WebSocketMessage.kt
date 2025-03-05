@@ -1,4 +1,4 @@
-package com.zybooks.petadoption.ui
+package com.zybooks.plugged.ui
 
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName

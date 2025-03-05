@@ -1,4 +1,4 @@
-package com.zybooks.petadoption
+package com.zybooks.plugged
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -8,8 +8,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
-import com.zybooks.petadoption.ui.PluggedScreen
-import com.zybooks.petadoption.ui.PluggedViewModel
+import com.zybooks.plugged.ui.PluggedScreen
+import com.zybooks.plugged.ui.PluggedViewModel
 
 class PluggedActivity : ComponentActivity() {
     private val viewModel: PluggedViewModel by viewModels()

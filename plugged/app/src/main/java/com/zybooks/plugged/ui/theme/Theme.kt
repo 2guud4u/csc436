@@ -1,4 +1,4 @@
-package com.zybooks.petadoption.ui.theme
+package com.zybooks.plugged.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

@@ -1,11 +1,10 @@
-package com.zybooks.petadoption.ui
+package com.zybooks.plugged.ui
 import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.java_websocket.WebSocket
@@ -23,10 +22,15 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+//enum class Status{
+//    CLIENT_CONNECT_SUCC,
+//    CLIENT_CONNECT_FAIL,
+//    SERVER_START_FAIL,
+//    SERVER_START_SUCC
+//}
 class PluggedViewModel : ViewModel() {
     private val TAG = "WebSocketApp"
     private val DEFAULT_PORT = 45678
-    private val gson = Gson()
     private val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
     // State
@@ -37,6 +41,7 @@ class PluggedViewModel : ViewModel() {
     val port = mutableStateOf(DEFAULT_PORT.toString())
     val messageToSend = mutableStateOf("")
     val isConnected = mutableStateOf(false)
+//    val connectionStatus = mutableStateOf<Status?>(null)
     val connectedIp = mutableStateOf("")
     val serverSize = mutableIntStateOf(0)
 
@@ -332,12 +337,14 @@ class PluggedViewModel : ViewModel() {
             Log.e(TAG, "Error occurred with $address: ${ex.message}")
             ex.printStackTrace()
             addQuestions(LogMessage("Error with $address: ${ex.message}", LogMessage.TYPE_ERROR))
+//            connectionStatus.value = Status.SERVER_START_FAIL
+
         }
 
         override fun onStart() {
             Log.d(TAG, "Server started")
             isConnected.value = true
-            addQuestions(LogMessage("Server started successfully", LogMessage.TYPE_SYSTEM))
+//            connectionStatus.value = Status.SERVER_START_SUCC
         }
     }
 
@@ -348,8 +355,8 @@ class PluggedViewModel : ViewModel() {
             // Send a connection notification
             val connectMessage = WebSocketMessage.createStatusMessage(WebSocketMessage.STATUS_CONNECTED)
             send(connectMessage)
+//            connectionStatus.value = Status.CLIENT_CONNECT_SUCC
 
-            addQuestions(LogMessage("Connected to server", LogMessage.TYPE_STATUS))
         }
 
         override fun onMessage(message: String) {
@@ -375,6 +382,8 @@ class PluggedViewModel : ViewModel() {
             ex.printStackTrace()
             addQuestions(LogMessage("Error: ${ex.message}", LogMessage.TYPE_ERROR))
             isConnected.value = false
+//            connectionStatus.value = Status.CLIENT_CONNECT_FAIL
+
         }
     }
 

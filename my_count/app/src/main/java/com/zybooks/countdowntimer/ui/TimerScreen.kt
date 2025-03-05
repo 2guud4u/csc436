@@ -28,7 +28,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zybooks.countdowntimer.ui.theme.CountdownTimerTheme
 import java.text.DecimalFormat
@@ -41,8 +40,6 @@ fun TimerScreen(
    modifier: Modifier = Modifier,
    timerViewModel: TimerViewModel = viewModel()
 ) {
-   val uiState by timerViewModel.uiState.collectAsStateWithLifecycle()
-
    Column(horizontalAlignment = Alignment.CenterHorizontally) {
       Box(
          modifier = modifier
@@ -50,26 +47,23 @@ fun TimerScreen(
             .size(240.dp),
          contentAlignment = Alignment.Center
       ) {
-         // TODO: Add AnimatedTimeIndicator here
-         if (uiState.isRunning) {
+         if (timerViewModel.isRunning) {
             AnimatedTimeIndicator(
-               timeDuration = uiState.totalMillis.toInt()
+               timeDuration = timerViewModel.totalMillis.toInt()
             )
          }
-
          Text(
-            text = timerText(uiState.remainingMillis),
+            text = timerText(timerViewModel.remainingMillis),
             fontSize = 40.sp,
          )
       }
       TimePicker(
-         hour = uiState.selectedHour,
-         min = uiState.selectedMinute,
-         sec = uiState.selectedSecond,
-
+         hour = timerViewModel.selectedHour,
+         min = timerViewModel.selectedMinute,
+         sec = timerViewModel.selectedSecond,
          onTimePick = timerViewModel::selectTime
       )
-      if (uiState.isRunning) {
+      if (timerViewModel.isRunning) {
          Button(
             onClick = timerViewModel::cancelTimer,
             modifier = modifier.padding(50.dp)
@@ -78,9 +72,9 @@ fun TimerScreen(
          }
       } else {
          Button(
-            enabled = uiState.selectedHour +
-                    uiState.selectedMinute +
-                    uiState.selectedSecond > 0,
+            enabled = timerViewModel.selectedHour +
+                    timerViewModel.selectedMinute +
+                    timerViewModel.selectedSecond > 0,
             onClick = timerViewModel::startTimer,
             modifier = modifier.padding(top = 50.dp)
          ) {
@@ -88,6 +82,21 @@ fun TimerScreen(
          }
       }
    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TimerScreenPreview() {
+   CountdownTimerTheme {
+      TimerScreen()
+   }
+}
+
+fun timerText(timeInMillis: Long): String {
+   val duration: Duration = timeInMillis.milliseconds
+   return String.format(
+      Locale.getDefault(),"%02d:%02d:%02d",
+      duration.inWholeHours, duration.inWholeMinutes % 60, duration.inWholeSeconds % 60)
 }
 
 @Composable
@@ -114,21 +123,6 @@ fun AnimatedTimeIndicator(
    LaunchedEffect(Unit) {
       progress = 0f
    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TimerScreenPreview() {
-   CountdownTimerTheme {
-      TimerScreen()
-   }
-}
-
-fun timerText(timeInMillis: Long): String {
-   val duration: Duration = timeInMillis.milliseconds
-   return String.format(
-      Locale.getDefault(),"%02d:%02d:%02d",
-      duration.inWholeHours, duration.inWholeMinutes % 60, duration.inWholeSeconds % 60)
 }
 
 @Composable

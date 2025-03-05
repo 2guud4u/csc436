@@ -1,6 +1,6 @@
-package com.zybooks.petadoption.data
+package com.zybooks.plugged.data
 
-import com.zybooks.petadoption.R
+import com.zybooks.plugged.R
 
 class PetDataSource {
    private val petList = listOf(

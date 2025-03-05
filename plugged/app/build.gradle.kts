@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-   namespace = "com.zybooks.petadoption"
+   namespace = "com.zybooks.plugged"
    compileSdk = 34
 
    defaultConfig {
-      applicationId = "com.zybooks.petadoption"
+      applicationId = "com.jia.plugged"
       minSdk = 24
       targetSdk = 34
       versionCode = 1

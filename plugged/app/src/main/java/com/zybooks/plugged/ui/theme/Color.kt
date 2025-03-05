@@ -1,4 +1,4 @@
-package com.zybooks.petadoption.ui.theme
+package com.zybooks.plugged.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
